@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, {useRef , useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import PhoneInput from "react-native-phone-number-input";
+
 
 export default function RegisterScreen({ navigation }) {
   const [role, setRole] = useState(null);
@@ -9,6 +11,8 @@ export default function RegisterScreen({ navigation }) {
   const [contactNumber, setContactNumber] = useState("");
   const [licenseImage, setLicenseImage] = useState(null);
   const [error, setError] = useState("");
+  const phoneInput = useRef(null);
+
 
   // Pakistani Number Validation
   const validatePhoneNumber = (number) => {
@@ -42,7 +46,7 @@ export default function RegisterScreen({ navigation }) {
        return;
      }*/
 
-    navigation.navigate("passwordHandle", {
+    navigation.navigate("OtpVerification", {
       role,
       userName,
       email,
@@ -101,23 +105,15 @@ export default function RegisterScreen({ navigation }) {
         autoCapitalize="none"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="+92XXXXXXXXXX"
-        value={contactNumber}
-        onChangeText={(text) => {
-          let formattedText = text.replace(/\D/g, ""); // Remove non-numeric characters
-          if (!formattedText.startsWith("92")) {
-            formattedText = "92" + formattedText; // Ensure it starts with 92
-          }
-          if (formattedText.length > 12) {
-            formattedText = formattedText.slice(0, 12); // Limit to correct length
-          }
-          setContactNumber("+" + formattedText);
-          validatePhoneNumber("+" + formattedText);
+      <PhoneInput
+        ref={phoneInput}
+        defaultCode="PK"  // 🇵🇰 Start with Pakistan
+        layout="first"
+        onChangeFormattedText={(text) => {
+          setContactNumber(text);  // Example: +923001234567
         }}
-        keyboardType="phone-pad"
-        maxLength={13}
+        withDarkTheme
+        autoFocus
       />
 
       {error ? <Text style={{ color: "red" }}>{error}</Text> : null}

@@ -1,65 +1,73 @@
-import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { View, ActivityIndicator } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createDrawerNavigator } from '@react-navigation/drawer'
+import { createDrawerNavigator } from "@react-navigation/drawer";
+
 // Import Screens
 import Login from "./src/screens/Auth/Login";
 import RegisterScreen from "./src/screens/Auth/Register";
 import CharityDashboard from "./src/screens/CharityDashboard";
-// Create Stack Navigator
+import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
+import SetPasswordScreen from "./src/screens/Auth/SetPassword";
 
-const StackNav = () => {
-  const Stack = createNativeStackNavigator();
+
+const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
+
+function DrawerNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: "#007bff" },
-        headerTintColor: "#fff",
-        headerTitleAlign: "center",
-      }}
-    >
-      {/* Home Screen with Navigation Buttons */}
-      <Stack.Screen name="Charity" component={CharityDashboard} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="Login" component={Login} />
-
-    </Stack.Navigator>
-  )
-}
-
-export default function App() {
-  const Drawer = createDrawerNavigator();
-
-
-  return (
-    <NavigationContainer>
-      <Drawer.Navigator>
-        <Drawer.Screen name="Charity" component={CharityDashboard}  />
-        <Drawer.Screen name="Register" component={RegisterScreen}  />
-        {/*<Drawer.Screen name="Login" component={ForgotPasswordScreen}  />*/}
-        <Drawer.Screen name="OTp" component={CharityDashboard}  />
-
-      </Drawer.Navigator>
-    </NavigationContainer> 
-
+    <Drawer.Navigator>
+      <Drawer.Screen name="Charity" component={CharityDashboard} />
+      <Drawer.Screen name="Login" component={Login} />
+    </Drawer.Navigator>
   );
 }
 
+export default function App() {
+  const [appIsReady, setAppIsReady] = useState(false);
 
+  useEffect(() => {
+    async function prepare() {
+      try {
+        await SplashScreen.preventAutoHideAsync();
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+    prepare();
+  }, []);
 
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      console.log('✅ Layout finished, hiding splash screen');
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
 
+  if (!appIsReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
 
+  return (
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Register">
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="Dashboard" component={DrawerNavigator} options={{ headerShown: false }} />
+          <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
+          <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
 
-
-
-
-
-
-
-
-
-
-
-
-
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
+  );
+}

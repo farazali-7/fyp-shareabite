@@ -8,26 +8,29 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/WhatsApp Image 2025-03-13 at 23.32.24_7466006b.jpg",
+      "image": "./assets/splash-screen.png",
       "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
+      "backgroundColor": "#292ccc"
     },
     "android": {
+      "package": "com.shareabite.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "splash": {
-        "image": "./assets/WhatsApp Image 2025-03-13 at 23.32.24_7466006b.jpg",
-        "resizeMode": "cover",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d48d1d47-98e2-46d6-90ad-367f6f922545"
+      }
     }
   }
 }
