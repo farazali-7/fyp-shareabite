@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native';
 
-export default function SetPasswordScreen({ route , navigation}) {
+export default function ResetPasswordScreen({ route , navigation}) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -41,7 +41,7 @@ export default function SetPasswordScreen({ route , navigation}) {
         onChangeText={setConfirmPassword}
       />
 
-      <Button title="Finish Registration" onPress={handleFinish} />
+      <Button title="Reset Password" onPress={handleFinish} />
     </View>
   );
 }

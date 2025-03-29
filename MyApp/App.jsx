@@ -11,7 +11,8 @@ import RegisterScreen from "./src/screens/Auth/Register";
 import CharityDashboard from "./src/screens/CharityDashboard";
 import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
 import SetPasswordScreen from "./src/screens/Auth/SetPassword";
-
+import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
+import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -44,7 +45,6 @@ export default function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      console.log('✅ Layout finished, hiding splash screen');
       await SplashScreen.hideAsync();
     }
   }, [appIsReady]);
@@ -60,11 +60,14 @@ export default function App() {
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Register">
+        <Stack.Navigator initialRouteName="Login">
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Dashboard" component={DrawerNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
           <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

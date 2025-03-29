@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 
-export default function Login({  }) {
+export default function Login({ navigation }) {
   const [role, setRole] = useState(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,8 +20,8 @@ export default function Login({  }) {
 
   const handleForgotPassword = () => {
     Alert.alert("Forgot Password", "Redirecting to password reset...");
-    // Here, you can navigate to the password reset screen if using React Navigation
-    // navigation.navigate("ForgotPassword");
+    navigation.navigate("ForgotPassword")
+    
   };
 
   return (

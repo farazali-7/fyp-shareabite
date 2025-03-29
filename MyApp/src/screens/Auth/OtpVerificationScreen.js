@@ -11,7 +11,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
   const recaptchaVerifier = useRef(null);
   const [confirmation, setConfirmation] = useState(null);
   const [code, setCode] = useState('');
-  const [formattedNumber, setFormattedNumber] = useState(route.params.contactNumber);
+  const { contactNumber, flow, ...restParams } = route.params;
   const [timer, setTimer] = useState(60);
   const [resendDisabled, setResendDisabled] = useState(true);
 
@@ -43,7 +43,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
         Alert.alert('Recaptcha not ready');
         return;
       }
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedNumber, recaptchaVerifier.current);
+      const confirmationResult = await signInWithPhoneNumber(auth, contactNumber, recaptchaVerifier.current);
       setConfirmation(confirmationResult);
       Alert.alert('OTP sent successfully');
       startTimer();
@@ -62,7 +62,19 @@ export default function OTPVerificationScreen({ navigation, route }) {
     try {
       const result = await confirmation.confirm(code);
       const verifiedPhone = result.user.phoneNumber;
-      navigation.navigate('SetPassword', { ...route.params, contactNumber: verifiedPhone });
+
+      if (flow === 'register') {
+        navigation.navigate('SetPassword', {
+          contactNumber :verifiedPhone,
+          ...restParams, // name, email, etc.
+        });
+      } else if (flow === 'forgot') {
+        navigation.navigate('ResetPassword', {
+          contactNumber,
+        });
+      }
+
+
     } catch (e) {
       console.log(e);
       Alert.alert('Invalid OTP');

@@ -14,17 +14,6 @@ export default function RegisterScreen({ navigation }) {
   const phoneInput = useRef(null);
 
 
-  // Pakistani Number Validation
-  const validatePhoneNumber = (number) => {
-    const pakistaniNumberRegex = /^\+92[0-9]{10}$/;
-    if (!pakistaniNumberRegex.test(number)) {
-      setError("Enter a valid Pakistani number (e.g., +923001234567)");
-      return false;
-    }
-    setError(""); // Clear error if valid
-    return true;
-  };
-
   const handleRegister = () => {
     if (!userName) {
       Alert.alert("Enter userName", "Please Enter User Name");
@@ -38,15 +27,13 @@ export default function RegisterScreen({ navigation }) {
       Alert.alert("Missing Credentials", "Please fill in all fields.");
       return;
     }
-    if (!validatePhoneNumber(contactNumber)) {
-      return;
-    }
     /* if (!licenseImage) {
        Alert.alert("Upload Required", "Please upload your license image.");
        return;
      }*/
 
     navigation.navigate("OtpVerification", {
+      flow:"register",
       role,
       userName,
       email,
@@ -104,7 +91,6 @@ export default function RegisterScreen({ navigation }) {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-
       <PhoneInput
         ref={phoneInput}
         defaultCode="PK"  // 🇵🇰 Start with Pakistan
