@@ -25,6 +25,20 @@ function DrawerNavigator() {
     </Drawer.Navigator>
   );
 }
+const EateryDrawerScreens = () => (
+  <EateryDrawer.Navigator>
+    <EateryDrawer.Screen name="Dashboard" component={EateryDashboard} />
+    <EateryDrawer.Screen name="Donations" component={DonationsScreen} />
+  </EateryDrawer.Navigator>
+);
+
+const CharityDrawerScreens = () => (
+  <CharityDrawer.Navigator>
+    <CharityDrawer.Screen name="Dashboard" component={CharityDashboard} />
+    <CharityDrawer.Screen name="Claim Food" component={ClaimScreen} />
+  </CharityDrawer.Navigator>
+);
+
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
@@ -60,7 +74,7 @@ export default function App() {
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
+        <Stack.Navigator initialRouteName="Register">
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Dashboard" component={DrawerNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
