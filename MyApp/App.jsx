@@ -13,6 +13,7 @@ import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
 import SetPasswordScreen from "./src/screens/Auth/SetPassword";
 import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
 import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
+import ResturantHomeScreen from "./src/screens/ResturantScreens/ResturantHome";
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -25,6 +26,7 @@ function DrawerNavigator() {
     </Drawer.Navigator>
   );
 }
+/*
 const EateryDrawerScreens = () => (
   <EateryDrawer.Navigator>
     <EateryDrawer.Screen name="Dashboard" component={EateryDashboard} />
@@ -38,7 +40,7 @@ const CharityDrawerScreens = () => (
     <CharityDrawer.Screen name="Claim Food" component={ClaimScreen} />
   </CharityDrawer.Navigator>
 );
-
+*/
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
@@ -74,7 +76,7 @@ export default function App() {
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Register">
+        <Stack.Navigator initialRouteName="ResturantScreen">
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Dashboard" component={DrawerNavigator} options={{ headerShown: false }} />
           <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
@@ -82,10 +84,12 @@ export default function App() {
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          <Stack.Screen name="ResturantScreen" component={ResturantHomeScreen} />
+
 
         </Stack.Navigator>
       </NavigationContainer>
     </View>
   );
 }
-//hi i am testing repo
+
