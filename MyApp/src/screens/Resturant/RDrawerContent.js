@@ -6,10 +6,9 @@ import { FontAwesome, AntDesign, Entypo } from '@expo/vector-icons';
 
 
 const drawerList = [
-    { icon: { name: 'home', library: AntDesign }, label: 'ResturantProfile', navigateTo: 'ResturantProfile' },
-
-    { icon: { name: 'home', library: AntDesign }, label: 'ResturantScreen', navigateTo: 'ResturantScreen' },
-    { icon: { name: 'users', library: FontAwesome }, label: 'ResturantContact', navigateTo: 'ResturantContact' },
+    { icon: { name: 'profile', library: AntDesign }, label: 'Profile', navigateTo: 'Profile' },
+    { icon: { name: 'edit', library: AntDesign }, label: 'EditProfile', navigateTo: 'EditProfile' },
+    { icon: { name: 'history', library: FontAwesome }, label: 'History', navigateTo: 'History' },
 
 ];
 

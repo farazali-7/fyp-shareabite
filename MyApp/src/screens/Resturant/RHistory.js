@@ -1,13 +1,13 @@
 import React from "react";
 import { Text, View, StyleSheet } from 'react-native';
 
-const ResturantContactScreen = () => {
+const RHistoryScreen = () => { 
     return (
         <View style={styles.container}> 
-            <Text>Restaurant Profile Screen</Text>
-            <Text>Restaurant Profile Screen</Text>
-            <Text>Restaurant Profile Screen</Text>
-            <Text>Restaurant Profile Screen</Text>
+            <Text>Restaurant History Screen Screen</Text>
+            <Text>Restaurant History Screen Screen</Text>
+            <Text>Restaurant History Screen Screen</Text>
+            <Text>Restaurant History Screen Screen</Text>
         </View>
     );
 };
@@ -21,4 +21,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default ResturantContactScreen;
+export default RHistoryScreen;
