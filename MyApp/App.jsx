@@ -25,6 +25,7 @@ import RProfileScreen from "./src/screens/Resturant/RProfile";
 import REditProfileScreen from './src/screens/Resturant/REditProfile';
 import RHistoryScreen from './src/screens/Resturant/RHistory';
 import TestingScreen from "./src/screens/Resturant/Testin";
+import RPost from "./src/screens/Resturant/RPost";
 
 
 
@@ -68,6 +69,7 @@ const ResturantStackNav = () => {
       <Stack.Screen name="EditProfile" component={REditProfileScreen} />
       <Stack.Screen name="History" component={RHistoryScreen} />
       <Stack.Screen name="Testing" component={TestingScreen} />
+      <Stack.Screen name="NewPost" component={RPost} />
 
     </Stack.Navigator>
   );
@@ -101,7 +103,7 @@ const ResturantTabs = () => {
         tabBarInactiveTintColor: 'gray',
         headerShown: false, //  hiding the header globally for all tabs to prevent the collision of darwer/screen headers
       })}
-    >
+      initialRouteName="Home">
 
       <Tab.Screen name="Home" component={RHomeScreen} />
       <Tab.Screen name="Search" component={RSearchScreen} />
