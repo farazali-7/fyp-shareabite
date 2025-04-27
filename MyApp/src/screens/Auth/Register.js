@@ -93,10 +93,10 @@ export default function RegisterScreen({ navigation }) {
       />
       <PhoneInput
         ref={phoneInput}
-        defaultCode="PK"  // 🇵🇰 Start with Pakistan
+        defaultCode="PK"  // default Pakistan
         layout="first"
         onChangeFormattedText={(text) => {
-          setContactNumber(text);  // Example: +923001234567
+          setContactNumber(text);  
         }}
         withDarkTheme
         autoFocus
@@ -104,7 +104,7 @@ export default function RegisterScreen({ navigation }) {
 
       {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
 
-      {/* Upload License Image */}
+      
       <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
         <Text style={styles.uploadButtonText}>Upload License Image</Text>
       </TouchableOpacity>

@@ -1,4 +1,3 @@
-// 4️⃣ SetPasswordScreen.js — Step 3: Set Password (No API yet)
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native';
 

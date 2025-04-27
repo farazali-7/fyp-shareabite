@@ -1,9 +1,15 @@
 import express from "express";
-import { registerUser, updateUser , loggedin} from "../controllers/userController.js";
+import {checkUserExists, registerUser, updateUser , loggedin} from "../controllers/userController.js";
 import upload from "../middlewares/uploadMiddleware.js"; // Middleware for image upload
+
+
 
 const router = express.Router();
 
+
+
+//check if user already exists 
+router.post("/check-user" ,checkUserExists )
 // Register User
 router.post("/register", upload.single("licenseImage"), registerUser);
 
