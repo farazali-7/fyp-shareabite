@@ -40,9 +40,9 @@ export default function PostCard({ post }) {
         onRequestClose={() => setVisible(false)}
       />
 
-      <Text style={styles.detail}>🍽️ Food Type: {post.foodType}</Text>
-      <Text style={styles.detail}>👥 Quantity: {post.quantity}</Text>
-      <Text style={styles.detail}>🕒 Best Before: {post.bestBefore}</Text>
+      <Text style={styles.detail}> Food Type: {post.foodType}</Text>
+      <Text style={styles.detail}> Quantity: {post.quantity}</Text>
+      <Text style={styles.detail}> Best Before: {post.bestBefore}</Text>
 
       <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
         <MaterialIcons name="location-on" size={24} color="red" />

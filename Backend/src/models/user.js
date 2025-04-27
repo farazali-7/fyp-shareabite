@@ -1,28 +1,27 @@
 import mongoose from "mongoose";
 
-const UserSchema = new mongoose.Schema(
-  {
-    role: { type: String, required: true }, // Eatery or Charity 
-    userName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    contactNumber: { type: String, required: true },
-    password: { type: String, required: true },
-    licenseImage: { type: String, required: true }, // Storing image path
-    profileImage: { type: String },
-
-    // New Fields for Profile Completion & Verification
-    profileCompleted: { type: Boolean, default: false }, // Track if profile is fully filled
-    status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" }, // Admin verification
-    approvedByAdmin: { type: Boolean, default: false }, // Admin approval status
-    location: { type: String }, 
-    operatingHours: { type: String },
-    // Eatery-Specific Fields
-    cuisineType: { type: String }, // e.g., Fast Food, Desi, etc. 
-
-  },
+const UserSchema  = new mongoose.Schema({
+  role: { type: String, enum: ['admin', 'restaurant', 'charity'], required: true },
+  userName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  contactNumber: { type: String, required: true },
+  password: { type: String, required: true },
+  profileImage: { type: String }, // URL to uploaded image
+  licenseImage: { type: String }, 
+  profileCompleted: { type: Boolean, default: false },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  approvedByAdmin: { type: Boolean, default: false },
+  location: { type: String },
+  operatingHours: { type: String }, 
+  cuisineType: { type: String }, // Only for restaurants
+},
   { timestamps: true }
 );
+
 
 const User = mongoose.model("User", UserSchema);
 
 export default User;
+
+
+
