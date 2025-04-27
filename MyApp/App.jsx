@@ -15,8 +15,9 @@ import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
 import SetPasswordScreen from "./src/screens/Auth/SetPassword";
 import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
 import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
-import DrawerContent from "./src/screens/Resturant/RDrawerContent";
+import RDrawerContent from "./src/screens/Resturant/RDrawerContent";
 
+//Restaurant Screens
 import RHomeScreen from "./src/screens/Resturant/RHome";
 import RSearchScreen from "./src/screens/Resturant/RSearch";
 import RNotificationScreen from "./src/screens/Resturant/RNotification";
@@ -26,9 +27,18 @@ import RHistoryScreen from './src/screens/Resturant/RHistory';
 import TestingScreen from "./src/screens/Resturant/Testin";
 import RPost from "./src/screens/Resturant/RPost";
 
-// Dummy Components for AdminStack and CharityStack
-const AdminScreen = () => <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>AdminStack</Text></View>;
-const CharityScreen = () => <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>CharityStack</Text></View>;
+//Charity Screens
+import CSearchScreen from "./src/screens/Charity/CSearch";
+import CNotificationScreen from "./src/screens/Charity/CNotification";
+import CProfileScreen from "./src/screens/Charity/CProfile";
+import CEditProfileScreen from "./src/screens/Charity/CEditProfile";
+import CHistoryScreen from "./src/screens/Charity/CHistory";
+import CHomeScreen from "./src/screens/Charity/CHome";
+import CDrawerContent from "./src/screens/Charity/CDrawerContent";
+
+//Admin Screeens
+
+
 
 // Stack Navigator for Resturant Screen
 const ResturantStackNav = () => {
@@ -47,7 +57,8 @@ const ResturantStackNav = () => {
   );
 };
 
-// Bottom Tab Navigator
+
+//Restaurant Bottom Tab Navigator
 const ResturantTabs = () => {
   const Tab = createBottomTabNavigator();
   return (
@@ -73,15 +84,73 @@ const ResturantTabs = () => {
   );
 };
 
-// Drawer Navigator
+//Restaurant Drawer Navigator
 const ResturantDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator drawerContent={props => <DrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+    <Drawer.Navigator drawerContent={props => <RDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
       <Drawer.Screen name="Profile" component={RProfileScreen} />
     </Drawer.Navigator>
   );
 };
+
+
+//Admin 
+const AdminScreen = () => <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>AdminStack</Text></View>;
+
+
+//Charity Stack Screens 
+const CharityStack = () => {
+  const Stack = createNativeStackNavigator();
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={CharityTabs} />
+      <Stack.Screen name="Search" component={CSearchScreen} />
+      <Stack.Screen name="Notification" component={CNotificationScreen} />
+      <Stack.Screen name="Profile" component={CProfileScreen} />
+      <Stack.Screen name="EditProfile" component={CEditProfileScreen} />
+      <Stack.Screen name="History" component={CHistoryScreen} />
+    </Stack.Navigator>
+  );
+};
+
+//Charity Bottom Tab Navigator
+const CharityTabs = () => {
+  const Tab = createBottomTabNavigator();
+  return (
+    <Tab.Navigator screenOptions={({ route }) => ({
+      tabBarIcon: ({ focused, color, size }) => {
+        let iconName;
+        if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+        else if (route.name === 'Search') iconName = focused ? 'search' : 'search-outline';
+        else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
+        else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+        return <Ionicons name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: 'tomato',
+      tabBarInactiveTintColor: 'gray',
+      headerShown: false,
+    })}
+    initialRouteName="Home">
+      <Tab.Screen name="Home" component={CHomeScreen} />
+      <Tab.Screen name="Search" component={CSearchScreen} />
+      <Tab.Screen name="Notification" component={CNotificationScreen} />
+      <Tab.Screen name="Profile" component={CharityDrawerNavigator} />
+    </Tab.Navigator>
+  );
+};
+
+//Charity Drawer Navigator
+const CharityDrawerNavigator = () => {
+  const Drawer = createDrawerNavigator();
+  return (
+    <Drawer.Navigator drawerContent={props => <CDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+      <Drawer.Screen name="Profile" component={CProfileScreen} />
+    </Drawer.Navigator>
+  );
+};
+
+
 
 // Auth Stack
 const AuthStack = () => {
@@ -161,7 +230,7 @@ export default function App() {
           <RootStack.Screen name="AuthStack" component={AuthStack} />
           <RootStack.Screen name="AdminStack" component={AdminScreen} />
           <RootStack.Screen name="ResturantStackNav" component={ResturantStackNav} />
-          <RootStack.Screen name="CharityStack" component={CharityScreen} />
+          <RootStack.Screen name="CharityStack" component={CharityStack} />
         </RootStack.Navigator>
       </NavigationContainer>
     </View>
