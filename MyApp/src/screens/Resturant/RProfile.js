@@ -4,10 +4,10 @@ import { Text, View, StyleSheet } from 'react-native';
 const RProfileScreen = () => { 
     return (
         <View style={styles.container}> 
-            <Text>Restaurant Profile Screen</Text>
-            <Text>Restaurant Profile Screen</Text>
-            <Text>Restaurant Profile Screen</Text>
-            <Text>Restaurant Profile Screen</Text>
+            <Text>Restaurant Edit Profile Screen</Text>
+            <Text>Restaurant Edit Profile Screen</Text>
+            <Text>Restaurant Edit Profile Screen</Text>
+            <Text>Restaurant Edit Profile Screen</Text>
         </View>
     );
 };

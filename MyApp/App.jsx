@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { View, ActivityIndicator, Text } from "react-native";
+import React, { useEffect, useState, useCallback} from "react";
+import { useNavigation } from "@react-navigation/native";
+import { View, ActivityIndicator, Text , StyleSheet ,TouchableOpacity ,Alert } from "react-native";
+
 import { NavigationContainer } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,6 +37,7 @@ import CEditProfileScreen from "./src/screens/Charity/CEditProfile";
 import CHistoryScreen from "./src/screens/Charity/CHistory";
 import CHomeScreen from "./src/screens/Charity/CHome";
 import CDrawerContent from "./src/screens/Charity/CDrawerContent";
+import { Button } from "react-native-paper";
 
 //Admin Screeens
 
@@ -71,6 +74,7 @@ const ResturantTabs = () => {
         else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
         return <Ionicons name={iconName} size={size} color={color} />;
       },
+
       tabBarActiveTintColor: 'tomato',
       tabBarInactiveTintColor: 'gray',
       headerShown: false,
@@ -96,7 +100,68 @@ const ResturantDrawerNavigator = () => {
 
 
 //Admin 
-const AdminScreen = () => <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>AdminStack</Text></View>;
+
+
+const AdminScreen = () => {
+  const navigation = useNavigation();
+
+  //  Logout logic: Remove AsyncStorage token and go back to AuthStack
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'AuthStack' }], // Reset to Auth stack
+      });
+    } catch (error) {
+      console.error('Logout Error:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
+  };
+
+  //what to do  on action
+  const handlePress = (action, navigateTo) => {
+    if (action === 'logout') {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Logout', onPress: handleLogout },
+        ],
+        { cancelable: true }
+      );
+    } 
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Admin Stack</Text>
+
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={() => handlePress(null, 'DummyScreen')}
+      >
+        <Text style={styles.buttonText}>Go to Dummy Screen</Text>
+      </TouchableOpacity>
+
+      {/* Logout Button */}
+      <TouchableOpacity 
+        style={[styles.button, { backgroundColor: 'red', marginTop: 20 }]} 
+        onPress={() => handlePress('logout', null)}
+      >
+        <Text style={styles.buttonText}>Logout</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+
+
+
+
 
 
 //Charity Stack Screens 
@@ -236,3 +301,27 @@ export default function App() {
     </View>
   );
 }
+
+
+
+
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: 'blue',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+});

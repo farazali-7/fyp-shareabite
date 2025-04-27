@@ -12,4 +12,24 @@ const foodPostSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('FoodPost', foodPostSchema);
+
+
+import mongoose from 'mongoose';
+
+const postSchema = new mongoose.Schema({
+  user: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  }, // connecting post to user
+  title: { type: String, required: true },
+  description: { type: String },
+  foodImages: [{ type: String }],
+  location: { type: String },
+  foodType: { type: String },
+  quantity: { type: Number },
+  expirydate: { type: Date },
+}, { timestamps: true });
+
+
+export default mongoose.model('FoodPost', postSchema);
