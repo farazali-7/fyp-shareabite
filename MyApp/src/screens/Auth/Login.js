@@ -1,49 +1,83 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login({ navigation }) {
   const [role, setRole] = useState(null);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    if (!role) {
-      Alert.alert("Select Role", "Please choose Eatery, Charity House, or Admin.");
-      return;
+  const handleLogin = async () => {
+    try {
+      if (!role) {
+        Alert.alert('Please select a role before logging in.');
+        return;
+      }
+
+      const dummyToken = "test-token-123";
+      const dummyUser = {
+        email: email,
+        userName: "Test User",
+        contactNumber: "1234567890",
+        role: role, 
+      };
+
+      await AsyncStorage.setItem('token', dummyToken);
+      await AsyncStorage.setItem('user', JSON.stringify(dummyUser));
+
+      // Navigate according to role
+      if (role === 'admin') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'AdminStack' }],
+        });
+      } else if (role === 'resturant') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'ResturantStackNav' }],
+        });
+      } else if (role === 'charity') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'CharityStack' }],
+        });
+      } else {
+        Alert.alert('Unknown Role');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Login Failed', error.message || 'Something went wrong');
     }
-    if (!username || !password) {
-      Alert.alert("Missing Credentials", "Please enter username and password.");
-      return;
-    }
-    Alert.alert("Login Successful", `Logged in as ${role}`);
   };
 
   const handleForgotPassword = () => {
     Alert.alert("Forgot Password", "Redirecting to password reset...");
-    navigation.navigate("ForgotPassword")
-    
+    navigation.navigate("ForgotPassword");
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      
+
+      {/* Role selection buttons */}
       <View style={styles.roleContainer}>
-        <TouchableOpacity 
-          style={[styles.roleButton, role === "Eatery" && styles.selectedRole]} 
-          onPress={() => setRole("Eatery")}
+        <TouchableOpacity
+          style={[styles.roleButton, role === "resturant" && styles.selectedRole]}
+          onPress={() => setRole("resturant")}
         >
           <Text style={styles.roleText}>Eatery</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.roleButton, role === "Charity House" && styles.selectedRole]} 
-          onPress={() => setRole("Charity House")}
+
+        <TouchableOpacity
+          style={[styles.roleButton, role === "charity" && styles.selectedRole]}
+          onPress={() => setRole("charity")}
         >
           <Text style={styles.roleText}>Charity House</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.roleButton, role === "Admin" && styles.selectedRole]} 
-          onPress={() => setRole("Admin")}
+
+        <TouchableOpacity
+          style={[styles.roleButton, role === "admin" && styles.selectedRole]}
+          onPress={() => setRole("admin")}
         >
           <Text style={styles.roleText}>Admin</Text>
         </TouchableOpacity>
@@ -51,10 +85,11 @@ export default function Login({ navigation }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}

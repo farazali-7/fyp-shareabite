@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, ActivityIndicator } from "react-native";
-import { NavigationContainer, useNavigation, DrawerActions } from "@react-navigation/native";
+import { View, ActivityIndicator, Text } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
 import * as SplashScreen from "expo-splash-screen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-
 
 // Import Screens
 import Login from "./src/screens/Auth/Login";
@@ -17,7 +17,6 @@ import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
 import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
 import DrawerContent from "./src/screens/Resturant/RDrawerContent";
 
-
 import RHomeScreen from "./src/screens/Resturant/RHome";
 import RSearchScreen from "./src/screens/Resturant/RSearch";
 import RNotificationScreen from "./src/screens/Resturant/RNotification";
@@ -27,150 +26,113 @@ import RHistoryScreen from './src/screens/Resturant/RHistory';
 import TestingScreen from "./src/screens/Resturant/Testin";
 import RPost from "./src/screens/Resturant/RPost";
 
+// Dummy Components for AdminStack and CharityStack
+const AdminScreen = () => <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>AdminStack</Text></View>;
+const CharityScreen = () => <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>CharityStack</Text></View>;
 
-
-
-
-
-
-// Stack Navigator for Resturant Screens  navigation
+// Stack Navigator for Resturant Screen
 const ResturantStackNav = () => {
   const Stack = createNativeStackNavigator();
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#d27001',
-        },
-        headerShown: false,
-        headerTintColor: '#3d3d3d',
-        headerTitleAlign: 'center',
-      }}
-    >
-
-
-      <Stack.Screen
-        name="Home"
-        component={ResturantTabs}
-      />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={ResturantTabs} />
       <Stack.Screen name="Search" component={RSearchScreen} />
       <Stack.Screen name="Notification" component={RNotificationScreen} />
-      <Stack.Screen name="Profile" component={RProfileScreen}  
-       /* options={({ navigation }) => ({
-          headerRight: () => (
-            <Ionicons
-              name="menu"
-              onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-              size={30}
-              color="#d27001"
-            />
-          ),
-        })}*/ />
+      <Stack.Screen name="Profile" component={RProfileScreen} />
       <Stack.Screen name="EditProfile" component={REditProfileScreen} />
       <Stack.Screen name="History" component={RHistoryScreen} />
       <Stack.Screen name="Testing" component={TestingScreen} />
       <Stack.Screen name="NewPost" component={RPost} />
-
     </Stack.Navigator>
   );
 };
 
-
-
+// Bottom Tab Navigator
 const ResturantTabs = () => {
   const Tab = createBottomTabNavigator();
-
   return (
-    //validation of  visibility focused/unfocused
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Search') {
-            iconName = focused ? 'search' : 'search-outline';
-          } else if (route.name === 'Notification') {
-            iconName = focused ? 'notifications' : 'notifications-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: 'tomato',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false, //  hiding the header globally for all tabs to prevent the collision of darwer/screen headers
-      })}
-      initialRouteName="Home">
-
+    <Tab.Navigator screenOptions={({ route }) => ({
+      tabBarIcon: ({ focused, color, size }) => {
+        let iconName;
+        if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+        else if (route.name === 'Search') iconName = focused ? 'search' : 'search-outline';
+        else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
+        else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+        return <Ionicons name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: 'tomato',
+      tabBarInactiveTintColor: 'gray',
+      headerShown: false,
+    })}
+    initialRouteName="Home">
       <Tab.Screen name="Home" component={RHomeScreen} />
       <Tab.Screen name="Search" component={RSearchScreen} />
       <Tab.Screen name="Notification" component={RNotificationScreen} />
       <Tab.Screen name="Profile" component={ResturantDrawerNavigator} />
+    </Tab.Navigator>
+  );
+};
 
-    </Tab.Navigator>)
-}
-
-
-
-// Drawer Navigator for for Resturant Screens
+// Drawer Navigator
 const ResturantDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator
-      drawerContent={props => <DrawerContent {...props} />}
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#0163d2',
-        },
-        headerShown: true,
-      }}>
+    <Drawer.Navigator drawerContent={props => <DrawerContent {...props} />} screenOptions={{ headerShown: true }}>
       <Drawer.Screen name="Profile" component={RProfileScreen} />
-
     </Drawer.Navigator>
   );
 };
 
-
-
-//auth satck before login screens
+// Auth Stack
 const AuthStack = () => {
   const Stack = createNativeStackNavigator();
-
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#a14098',
-        },
-        headerShown: false,
-        headerTintColor: '##3d3d3d',
-        headerTitleAlign: 'center',
-      }}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
       <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
-      <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
-  )
-}
+  );
+};
 
-
+// Now Root Stack which manages Auth, Admin, Resturant, Charity
+const RootStack = createNativeStackNavigator();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const [initialRoute, setInitialRoute] = useState('AuthStack');
 
   useEffect(() => {
     async function prepare() {
       try {
         await SplashScreen.preventAutoHideAsync();
-        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const token = await AsyncStorage.getItem('token');
+        const user = await AsyncStorage.getItem('user');
+
+        if (token && user) {
+          const parsedUser = JSON.parse(user);
+
+          if (parsedUser.role === 'admin') {
+            setInitialRoute('AdminStack');
+          } else if (parsedUser.role === 'resturant') {
+            setInitialRoute('ResturantStackNav');
+          } else if (parsedUser.role === 'charity') {
+            setInitialRoute('CharityStack');
+          } else {
+            setInitialRoute('AuthStack');
+          }
+        } else {
+          setInitialRoute('AuthStack');
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (e) {
         console.warn(e);
+        setInitialRoute('AuthStack');
       } finally {
         setAppIsReady(true);
       }
@@ -184,7 +146,7 @@ export default function App() {
     }
   }, [appIsReady]);
 
-  if (!appIsReady) {
+  if (!appIsReady || !initialRoute) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#007bff" />
@@ -195,8 +157,13 @@ export default function App() {
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-        <AuthStack />
-              </NavigationContainer>
+        <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+          <RootStack.Screen name="AuthStack" component={AuthStack} />
+          <RootStack.Screen name="AdminStack" component={AdminScreen} />
+          <RootStack.Screen name="ResturantStackNav" component={ResturantStackNav} />
+          <RootStack.Screen name="CharityStack" component={CharityScreen} />
+        </RootStack.Navigator>
+      </NavigationContainer>
     </View>
   );
 }
