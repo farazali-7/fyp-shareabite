@@ -7,40 +7,37 @@ export default function Login({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+
   const handleLogin = async () => {
     try {
       if (!role) {
         Alert.alert('Please select a role before logging in.');
         return;
       }
-
-      const dummyToken = "test-token-123";
-      const dummyUser = {
-        email: email,
-        userName: "Test User",
-        contactNumber: "1234567890",
-        role: role, 
-      };
-
-      await AsyncStorage.setItem('token', dummyToken);
-      await AsyncStorage.setItem('user', JSON.stringify(dummyUser));
-
-      // Navigate according to role
-      if (role === 'admin') {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'AdminStack' }],
-        });
-      } else if (role === 'resturant') {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'ResturantStackNav' }],
-        });
-      } else if (role === 'charity') {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'CharityStack' }],
-        });
+  
+      const response = await fetch("http://localhost:3000/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        Alert.alert("Login Failed", data.message);
+        return;
+      }
+  
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+  
+      // Navigate based on role
+      if (data.user.role === 'admin') {
+        navigation.reset({ index: 0, routes: [{ name: 'AdminStack' }] });
+      } else if (data.user.role === 'resturant') {
+        navigation.reset({ index: 0, routes: [{ name: 'ResturantStackNav' }] });
+      } else if (data.user.role === 'charity') {
+        navigation.reset({ index: 0, routes: [{ name: 'CharityStack' }] });
       } else {
         Alert.alert('Unknown Role');
       }
@@ -49,6 +46,9 @@ export default function Login({ navigation }) {
       Alert.alert('Login Failed', error.message || 'Something went wrong');
     }
   };
+  
+
+
 
   const handleForgotPassword = () => {
     Alert.alert("Forgot Password", "Redirecting to password reset...");
@@ -59,7 +59,6 @@ export default function Login({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
 
-      {/* Role selection buttons */}
       <View style={styles.roleContainer}>
         <TouchableOpacity
           style={[styles.roleButton, role === "resturant" && styles.selectedRole]}

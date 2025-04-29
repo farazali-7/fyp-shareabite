@@ -38,6 +38,9 @@ import CHistoryScreen from "./src/screens/Charity/CHistory";
 import CHomeScreen from "./src/screens/Charity/CHome";
 import CDrawerContent from "./src/screens/Charity/CDrawerContent";
 import { Button } from "react-native-paper";
+import EditPostScreen from "./src/screens/Resturant/REditPostScreen";
+import RViewProfileDetails from "./src/screens/Resturant/RViewProfileDetails";
+import RSearchViewProfileScreen from "./src/screens/Resturant/RSearchViewProfile";
 
 //Admin Screeens
 
@@ -52,10 +55,16 @@ const ResturantStackNav = () => {
       <Stack.Screen name="Search" component={RSearchScreen} />
       <Stack.Screen name="Notification" component={RNotificationScreen} />
       <Stack.Screen name="Profile" component={RProfileScreen} />
+      <Stack.Screen name="EditPostScreen" component={EditPostScreen} />
+      <Stack.Screen name="ViewProfileDetails" component={RViewProfileDetails} />
+      <Stack.Screen name="SearchViewProfileScreen" component={RSearchViewProfileScreen} />
+
+
       <Stack.Screen name="EditProfile" component={REditProfileScreen} />
       <Stack.Screen name="History" component={RHistoryScreen} />
       <Stack.Screen name="Testing" component={TestingScreen} />
       <Stack.Screen name="NewPost" component={RPost} />
+
     </Stack.Navigator>
   );
 };

@@ -1,12 +1,13 @@
+// middlewares/uploadMiddleware.js
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Convert `__dirname` for ES Modules
+// Convert __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Storage engine
+// Storage Engine
 const storage = multer.diskStorage({
   destination: path.join(__dirname, "../uploads/"),
   filename: (req, file, cb) => {
@@ -14,7 +15,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter (allow only images)
+// File Filter (only images)
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);

@@ -14,6 +14,7 @@ const UserSchema  = new mongoose.Schema({
   location: { type: String },
   operatingHours: { type: String }, 
   cuisineType: { type: String }, // Only for restaurants
+  subscribers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], 
 },
   { timestamps: true }
 );

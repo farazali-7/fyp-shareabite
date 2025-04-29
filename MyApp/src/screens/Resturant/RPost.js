@@ -5,10 +5,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
-import { v4 as uuidv4 } from 'uuid';
+// import axios from 'axios';
 
-export default function RPost() {
-  const navigation = useNavigation();
+export default function RPost(navigation) {
   const [images, setImages] = useState([]);
   const [foodType, setFoodType] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -16,6 +15,7 @@ export default function RPost() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState(null);
 
+  const loggedInUserId = 'user123'; // 📍 Assume you have userId from login
 
   useEffect(() => {
     (async () => {
@@ -24,7 +24,6 @@ export default function RPost() {
         Alert.alert('Permission denied', 'Location access is required.');
         return;
       }
-
       let loc = await Location.getCurrentPositionAsync({});
       setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
     })();
@@ -42,33 +41,38 @@ export default function RPost() {
   };
 
   const handleSave = () => {
-   if (!foodType || !quantity /*|| !bestBefore || !description || images.length === 0 || !location*/) {
+    if (!foodType || !quantity || !bestBefore || !description || images.length === 0 || !location) {
       Alert.alert('Missing Fields', 'Please fill all fields and add an image.');
       return;
     }
-    console.log(images);
-console.log(foodType);
-console.log(quantity);
-console.log(bestBefore);
-console.log(description);
-console.log(location);
-
-
 
     const newPost = {
-    //  id: uuidv4(),
-      userName: 'You',
-      images,
       foodType,
       quantity,
       bestBefore,
       description,
+      images,
       latitude: location.latitude,
       longitude: location.longitude,
-      createdAt: new Date().toISOString(),
+      createdBy: loggedInUserId, // 🔥 connect to user
     };
 
-    navigation.navigate('Home');
+    console.log('Post:', newPost);
+
+    {/* 
+    axios.post('http://yourserver.com/api/posts', newPost)
+      .then(response => {
+        console.log('Post created:', response.data);
+        navigation.navigate('Home');
+      })
+      .catch(error => {
+        console.error('Error creating post:', error);
+      });
+    */}
+
+    Alert.alert('Post Created', 'Your post has been created successfully!', [
+      { text: 'OK', onPress: () => navigation.navigate('Home') }
+    ]);
   };
 
   return (
@@ -86,8 +90,8 @@ console.log(location);
       </ScrollView>
 
       <TextInput placeholder="Food Type" value={foodType} onChangeText={setFoodType} style={styles.input} />
-      <TextInput placeholder="Quantity (e.g., 2 people)" value={quantity} onChangeText={setQuantity} style={styles.input} />
-      <TextInput placeholder="Best Before (e.g., 2025-04-08)" value={bestBefore} onChangeText={setBestBefore} style={styles.input} />
+      <TextInput placeholder="Quantity" value={quantity} onChangeText={setQuantity} style={styles.input} />
+      <TextInput placeholder="Best Before (YYYY-MM-DD)" value={bestBefore} onChangeText={setBestBefore} style={styles.input} />
       <TextInput placeholder="Description" value={description} onChangeText={setDescription} multiline style={[styles.input, { height: 100 }]} />
 
       <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
