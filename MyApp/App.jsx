@@ -43,7 +43,7 @@ import RViewProfileDetails from "./src/screens/Resturant/RViewProfileDetails";
 import RSearchViewProfileScreen from "./src/screens/Resturant/RSearchViewProfile";
 
 //Admin Screeens
-
+//working in App.js 
 
 
 // Stack Navigator for Resturant Screen
