@@ -1,57 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker'; 
-// import axios from 'axios'; 
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ScrollView, Alert, Image
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { getUserProfile, updateUserProfile } from '../../apis/userAPI';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const  REditProfileScreen = ({ navigation }) => {
-  const dummyUserData = {
-    _id: '123456',
-    role: 'restaurant',
-    userName: 'Faraz Bhatti',
-    email: 'faraz@example.com',
-    contactNumber: '03001234567',
-    password: '',
-    profileImage: 'https://i.pravatar.cc/300',
-    licenseImage: 'https://via.placeholder.com/300x200',
-    profileCompleted: true,
-    status: 'approved',
-    approvedByAdmin: true,
-    location: 'Lahore, Pakistan',
-    operatingHours: '10 AM - 10 PM',
-    cuisineType: 'Pakistani, BBQ',
-  };
-
+const REditProfileScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
 
   useEffect(() => {
-    setFormData(dummyUserData);
+    const loadUser = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        const parsedUser = JSON.parse(storedUser);
+        setUserId(parsedUser._id);
+
+        const profile = await getUserProfile(); // API call
+        console.log(profile)
+        setFormData(profile.user);
+      } catch (err) {
+        Alert.alert('Error', 'Failed to load profile.');
+      }
+    };
+
+    loadUser();
   }, []);
 
   const handleChange = (field, value) => {
     if (isEditing) {
-      setFormData(prevState => ({
-        ...prevState,
-        [field]: value,
-      }));
+      setFormData(prev => ({ ...prev, [field]: value }));
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  const handleEdit = () => setIsEditing(true);
 
   const handleSave = async () => {
     try {
-      setIsEditing(false);
-      // const token = await AsyncStorage.getItem('token');
-      // await axios.put('your-server-url/api/users/update', formData, { headers: { Authorization: `Bearer ${token}` } });
+      const updatedForm = new FormData();
+      updatedForm.append('userName', formData.userName);
+      updatedForm.append('operatingHours', formData.operatingHours);
+      if (formData.role === 'restaurant') {
+        updatedForm.append('cuisineType', formData.cuisineType);
+      }
+      if (profileImageFile) {
+        const filename = profileImageFile.split('/').pop();
+        const type = `image/${filename.split('.').pop()}`;
+        updatedForm.append('profileImage', {
+          uri: profileImageFile,
+          type,
+          name: filename,
+        });
+      }
 
-      Alert.alert('Saved', 'Profile updated successfully (Dummy for now)');
-      navigation.goBack();
+      await updateUserProfile(userId, updatedForm);
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
-      console.error(error);
+      console.error(' Update error:', error);
       Alert.alert('Error', 'Failed to save changes.');
     }
   };
@@ -61,7 +71,7 @@ const  REditProfileScreen = ({ navigation }) => {
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need permission to access your photos.');
+      Alert.alert('Permission Denied', 'Access to media library is needed.');
       return;
     }
 
@@ -73,16 +83,13 @@ const  REditProfileScreen = ({ navigation }) => {
     });
 
     if (!result.cancelled) {
-      setFormData(prevState => ({
-        ...prevState,
-        profileImage: result.uri,
-      }));
+      setProfileImageFile(result.uri);
+      setFormData(prev => ({ ...prev, profileImage: result.uri }));
     }
   };
 
   const handleLicenseView = () => {
-    Alert.alert('License Image', 'License image full preview coming soon.');
-    // Later: Open full screen image view modal
+    Alert.alert('License Image', 'License image view coming soon.');
   };
 
   return (
@@ -188,6 +195,7 @@ const  REditProfileScreen = ({ navigation }) => {
       )}
     </ScrollView>
   );
+ 
 };
 
 const styles = StyleSheet.create({

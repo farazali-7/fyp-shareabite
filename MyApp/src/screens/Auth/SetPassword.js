@@ -1,23 +1,64 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native';
+import {
+  View,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  Text,
+} from 'react-native';
+import { registerUser } from '../../apis/userAPI';
 
-export default function SetPasswordScreen({ route , navigation}) {
+export default function SetPasswordScreen({ route, navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!password || !confirmPassword) {
-      return Alert.alert('Please fill both password fields');
+      return Alert.alert('Missing Fields', 'Please fill both password fields');
     }
     if (password !== confirmPassword) {
-      return Alert.alert('Passwords do not match');
+      return Alert.alert('Mismatch', 'Passwords do not match');
     }
     if (password.length < 6) {
-      return Alert.alert('Password must be at least 6 characters');
+      return Alert.alert('Too Short', 'Password must be at least 6 characters');
     }
 
-    navigation.navigate("Login")
-    console.log('User info:', route.params ,password);
+    // Destructure the user data from previous screen
+    const { role, userName, email, contactNumber, licenseImage } = route.params;
+
+    // ✅ Map role from display value to backend-accepted value
+    const mappedRole =
+      role === 'Eatery'
+        ? 'restaurant'
+        : role === 'Charity House'
+        ? 'charity'
+        : role;
+
+    const formData = new FormData();
+    formData.append('role', mappedRole);
+    formData.append('userName', userName);
+    formData.append('email', email);
+    formData.append('contactNumber', contactNumber);
+    formData.append('password', password);
+
+    // ✅ Add license image file
+    formData.append('licenseImage', {
+      uri: licenseImage,
+      type: 'image/jpeg',
+      name: 'license.jpg',
+    });
+
+    try {
+      const res = await registerUser(formData);
+
+      Alert.alert('Success', res.message || 'Registration successful', [
+        { text: 'Go to Login', onPress: () => navigation.navigate('Login') },
+      ]);
+    } catch (err) {
+      console.error('❌ Registration Error:', err);
+      Alert.alert('Registration Failed', err.message || 'Something went wrong');
+    }
   };
 
   return (
@@ -46,16 +87,25 @@ export default function SetPasswordScreen({ route , navigation}) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, flex: 1, justifyContent: 'center' },
+  container: {
+    padding: 20,
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#f5f5f5',
+  },
   input: {
     borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
     marginBottom: 15,
     padding: 10,
     fontSize: 16,
+    backgroundColor: 'white',
+    borderRadius: 4,
   },
   label: {
     fontWeight: 'bold',
     fontSize: 14,
     marginBottom: 5,
+    color: '#333',
   },
 });

@@ -1,27 +1,84 @@
 import express from "express";
-import {checkUserExists, registerUser, updateUser , loggedin} from "../controllers/userController.js";
-import upload from "../middlewares/uploadMiddleware.js"; // Middleware for image upload
-import { getUserProfile } from "../controllers/userController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import {
+  checkUserExists,
+  registerUser,
+  updateUserProfile,
+  loginUser,
+  contactNumberExits,
+  resetPassword,
+  getUserProfile,
+  searchUsersProfile,
+  getProfileAndPosts,
+  toggleSubscribe,
+  userProfileDetails,
+  createPost,
+  requestFood,
+  getAllPosts,
+  getCharityNotifications
+} from "../controllers/userController.js";
 
+import upload from "../middlewares/uploadMiddleware.js";
+import protect from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 
-//edit profile 
-router.put("/updateProfile/:id", protect, upload.single("profileImage"), updateUserProfile);
+//Edit Profile
+router.put(
+  "/updateProfile/:id",
+  protect,
+  upload.single("profileImage"),
+  updateUserProfile
+);
 
-//main profile
-router.get("/profile", protect, getUserProfile);
+//  Check if user already exists by email or phone
+router.post("/check-user", checkUserExists);
 
-//check if user already exists 
-router.post("/check-user" ,checkUserExists )
-// Register User
+//  Register a user (with license image)
 router.post("/register", upload.single("licenseImage"), registerUser);
 
-//logedin user 
-router.post("/login",  loggedin);
+//  Login user
+router.post("/login", loginUser);
 
-// Update User Profile
-router.put("/update/:userId", upload.single("licenseImage"), updateUser);
+//  Check contact number exists (OTP step)
+router.post("/check-contact", contactNumberExits);
+
+//  Reset password (via email or phone)
+router.post("/reset-password", resetPassword);
+
+//  Get logged-in user's profile & posts
+router.get("/profile", protect, getUserProfile);
+router.post('/create', upload.array('images'), createPost);
+
+//  Update logged-in user's profile
+router.put("/updateProfile/:id", protect, upload.single("profileImage"), updateUserProfile);
+
+//  Search users by name
+router.get("/search/:query", searchUsersProfile);
+
+//  Get public profile and posts of a user
+router.get("/profile/:id", getProfileAndPosts);
+
+//  Get full user profile details (for ViewProfileDetails screen)
+router.get("/profile/details/:id", userProfileDetails);
+
+//  Subscribe / Unsubscribe to a user
+router.post("/subscribe/:targetId", protect, toggleSubscribe);
+
+// post food
+router.post(
+  "/create",
+  upload.array('images', 5), 
+  createPost
+);
+
+//request for food 
+router.post('/request', requestFood);
+
+// GET /api/posts/all
+router.get('/all', getAllPosts);
+
+router.get('/charityNotifications', getCharityNotifications)
+
+
 
 export default router;

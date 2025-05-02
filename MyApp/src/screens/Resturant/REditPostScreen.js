@@ -16,7 +16,7 @@ const EditPostScreen = (navigation) => {
   const [description, setDescription] = useState(post?.description || '');
   const [images, setImages] = useState(post?.images || []);
 
-  // 📍 Pick a new image
+  //  Pick a new image
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -29,7 +29,7 @@ const EditPostScreen = (navigation) => {
     }
   };
 
-  // 📍 Remove image by index
+  //  Remove image by index
   const handleRemoveImage = (index) => {
     const updatedImages = images.filter((_, idx) => idx !== index);
     setImages(updatedImages);
@@ -44,7 +44,7 @@ const EditPostScreen = (navigation) => {
       images,
     };
 
-    // ✅ Update Post API (inside comment)
+    //  Update Post API (inside comment)
     {/* 
     axios.put(`http://yourserver.com/api/posts/${post._id}`, updatedPost)
       .then(res => {

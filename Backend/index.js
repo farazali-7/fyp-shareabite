@@ -5,6 +5,7 @@ import userRoutes from "./src/routes/userRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
+
 const app = express();
 
 // Convert `__dirname` for ES Modules
@@ -18,7 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors()); 
 
 app.use("/api/users", userRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve uploaded images
+app.use("/uploads/posts", express.static(path.join(__dirname, "src/uploads"))); // Serve uploaded images
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+    console.log('Server running on port '+ PORT);
+  });

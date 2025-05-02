@@ -1,179 +1,142 @@
-import React, { useEffect, useState, useCallback} from "react";
-import { useNavigation } from "@react-navigation/native";
-import { View, ActivityIndicator, Text , StyleSheet ,TouchableOpacity ,Alert } from "react-native";
-
-import { NavigationContainer } from "@react-navigation/native";
-import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  View,
+  ActivityIndicator,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SplashScreen from "expo-splash-screen";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 
-// Import Screens
+// ✅ Auth Screens
 import Login from "./src/screens/Auth/Login";
 import RegisterScreen from "./src/screens/Auth/Register";
 import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
 import SetPasswordScreen from "./src/screens/Auth/SetPassword";
 import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
 import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
-import RDrawerContent from "./src/screens/Resturant/RDrawerContent";
 
-//Restaurant Screens
+// ✅ Restaurant Screens
 import RHomeScreen from "./src/screens/Resturant/RHome";
 import RSearchScreen from "./src/screens/Resturant/RSearch";
 import RNotificationScreen from "./src/screens/Resturant/RNotification";
 import RProfileScreen from "./src/screens/Resturant/RProfile";
-import REditProfileScreen from './src/screens/Resturant/REditProfile';
-import RHistoryScreen from './src/screens/Resturant/RHistory';
-import TestingScreen from "./src/screens/Resturant/Testin";
+import REditProfileScreen from "./src/screens/Resturant/REditProfile";
+import RHistoryScreen from "./src/screens/Resturant/RHistory";
 import RPost from "./src/screens/Resturant/RPost";
+import RDrawerContent from "./src/screens/Resturant/RDrawerContent";
+import EditPostScreen from "./src/screens/Resturant/REditPostScreen";
+import RViewProfileDetails from "./src/screens/Resturant/RViewProfileDetails";
+import RSearchViewProfileScreen from "./src/screens/Resturant/RSearchViewProfile";
 
-//Charity Screens
+// ✅ Charity Screens
+import CHomeScreen from "./src/screens/Charity/CHome";
 import CSearchScreen from "./src/screens/Charity/CSearch";
 import CNotificationScreen from "./src/screens/Charity/CNotification";
 import CProfileScreen from "./src/screens/Charity/CProfile";
 import CEditProfileScreen from "./src/screens/Charity/CEditProfile";
 import CHistoryScreen from "./src/screens/Charity/CHistory";
-import CHomeScreen from "./src/screens/Charity/CHome";
 import CDrawerContent from "./src/screens/Charity/CDrawerContent";
-import { Button } from "react-native-paper";
-import EditPostScreen from "./src/screens/Resturant/REditPostScreen";
-import RViewProfileDetails from "./src/screens/Resturant/RViewProfileDetails";
-import RSearchViewProfileScreen from "./src/screens/Resturant/RSearchViewProfile";
-
-//Admin Screeens
-//working in App.js 
 
 
-// Stack Navigator for Resturant Screen
-const ResturantStackNav = () => {
+/*const AdminStack = ()=>{
   const Stack = createNativeStackNavigator();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={ResturantTabs} />
+      <Stack.Screen name="Home" component={RestaurantTabs} />
+    </Stack.Navigator>);
+}*/
+
+//  Restaurant Stack Navigator
+const RestaurantStackNav = () => {
+  const Stack = createNativeStackNavigator();
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={RestaurantTabs} />
       <Stack.Screen name="Search" component={RSearchScreen} />
       <Stack.Screen name="Notification" component={RNotificationScreen} />
       <Stack.Screen name="Profile" component={RProfileScreen} />
       <Stack.Screen name="EditPostScreen" component={EditPostScreen} />
       <Stack.Screen name="ViewProfileDetails" component={RViewProfileDetails} />
       <Stack.Screen name="SearchViewProfileScreen" component={RSearchViewProfileScreen} />
-
-
       <Stack.Screen name="EditProfile" component={REditProfileScreen} />
       <Stack.Screen name="History" component={RHistoryScreen} />
-      <Stack.Screen name="Testing" component={TestingScreen} />
       <Stack.Screen name="NewPost" component={RPost} />
-
     </Stack.Navigator>
   );
 };
 
-
-//Restaurant Bottom Tab Navigator
-const ResturantTabs = () => {
+const RestaurantTabs = () => {
   const Tab = createBottomTabNavigator();
   return (
-    <Tab.Navigator screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
-        if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-        else if (route.name === 'Search') iconName = focused ? 'search' : 'search-outline';
-        else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
-        else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
-        return <Ionicons name={iconName} size={size} color={color} />;
-      },
-
-      tabBarActiveTintColor: 'tomato',
-      tabBarInactiveTintColor: 'gray',
-      headerShown: false,
-    })}
-    initialRouteName="Home">
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === "Home") iconName = focused ? "home" : "home-outline";
+          else if (route.name === "Search") iconName = focused ? "search" : "search-outline";
+          else if (route.name === "Notification") iconName = focused ? "notifications" : "notifications-outline";
+          else if (route.name === "Profile") iconName = focused ? "person" : "person-outline";
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "tomato",
+        tabBarInactiveTintColor: "gray",
+        headerShown: false,
+      })}
+      initialRouteName="Home"
+    >
       <Tab.Screen name="Home" component={RHomeScreen} />
       <Tab.Screen name="Search" component={RSearchScreen} />
       <Tab.Screen name="Notification" component={RNotificationScreen} />
-      <Tab.Screen name="Profile" component={ResturantDrawerNavigator} />
+      <Tab.Screen name="Profile" component={RestaurantDrawerNavigator} />
     </Tab.Navigator>
   );
 };
 
-//Restaurant Drawer Navigator
-const ResturantDrawerNavigator = () => {
+const RestaurantDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator drawerContent={props => <RDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+    <Drawer.Navigator drawerContent={(props) => <RDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
       <Drawer.Screen name="Profile" component={RProfileScreen} />
     </Drawer.Navigator>
   );
 };
 
-
-//Admin 
-
-
+//  Admin Screen
 const AdminScreen = () => {
   const navigation = useNavigation();
-
-  //  Logout logic: Remove AsyncStorage token and go back to AuthStack
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'AuthStack' }], // Reset to Auth stack
-      });
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+      navigation.reset({ index: 0, routes: [{ name: "AuthStack" }] });
     } catch (error) {
-      console.error('Logout Error:', error);
-      Alert.alert('Error', 'Failed to logout. Please try again.');
+      console.error("Logout Error:", error);
+      Alert.alert("Error", "Failed to logout. Please try again.");
     }
-  };
-
-  //what to do  on action
-  const handlePress = (action, navigateTo) => {
-    if (action === 'logout') {
-      Alert.alert(
-        'Logout',
-        'Are you sure you want to logout?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Logout', onPress: handleLogout },
-        ],
-        { cancelable: true }
-      );
-    } 
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Admin Stack</Text>
-
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={() => handlePress(null, 'DummyScreen')}
-      >
+      <TouchableOpacity style={styles.button} onPress={() => Alert.alert("Dummy")}>
         <Text style={styles.buttonText}>Go to Dummy Screen</Text>
       </TouchableOpacity>
-
-      {/* Logout Button */}
-      <TouchableOpacity 
-        style={[styles.button, { backgroundColor: 'red', marginTop: 20 }]} 
-        onPress={() => handlePress('logout', null)}
-      >
+      <TouchableOpacity style={[styles.button, { backgroundColor: "red", marginTop: 20 }]} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-
-
-
-
-
-
-//Charity Stack Screens 
+// ✅ Charity Stack Navigator
 const CharityStack = () => {
   const Stack = createNativeStackNavigator();
   return (
@@ -188,24 +151,25 @@ const CharityStack = () => {
   );
 };
 
-//Charity Bottom Tab Navigator
 const CharityTabs = () => {
   const Tab = createBottomTabNavigator();
   return (
-    <Tab.Navigator screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
-        if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-        else if (route.name === 'Search') iconName = focused ? 'search' : 'search-outline';
-        else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
-        else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
-        return <Ionicons name={iconName} size={size} color={color} />;
-      },
-      tabBarActiveTintColor: 'tomato',
-      tabBarInactiveTintColor: 'gray',
-      headerShown: false,
-    })}
-    initialRouteName="Home">
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === "Home") iconName = focused ? "home" : "home-outline";
+          else if (route.name === "Search") iconName = focused ? "search" : "search-outline";
+          else if (route.name === "Notification") iconName = focused ? "notifications" : "notifications-outline";
+          else if (route.name === "Profile") iconName = focused ? "person" : "person-outline";
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "tomato",
+        tabBarInactiveTintColor: "gray",
+        headerShown: false,
+      })}
+      initialRouteName="Home"
+    >
       <Tab.Screen name="Home" component={CHomeScreen} />
       <Tab.Screen name="Search" component={CSearchScreen} />
       <Tab.Screen name="Notification" component={CNotificationScreen} />
@@ -214,19 +178,16 @@ const CharityTabs = () => {
   );
 };
 
-//Charity Drawer Navigator
 const CharityDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator drawerContent={props => <CDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+    <Drawer.Navigator drawerContent={(props) => <CDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
       <Drawer.Screen name="Profile" component={CProfileScreen} />
     </Drawer.Navigator>
   );
 };
 
-
-
-// Auth Stack
+// ✅ Auth Stack
 const AuthStack = () => {
   const Stack = createNativeStackNavigator();
   return (
@@ -241,41 +202,34 @@ const AuthStack = () => {
   );
 };
 
-// Now Root Stack which manages Auth, Admin, Resturant, Charity
+// ✅ Root Stack
 const RootStack = createNativeStackNavigator();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
-  const [initialRoute, setInitialRoute] = useState('AuthStack');
+  const [initialRoute, setInitialRoute] = useState("AuthStack");
 
   useEffect(() => {
     async function prepare() {
       try {
         await SplashScreen.preventAutoHideAsync();
-
-        const token = await AsyncStorage.getItem('token');
-        const user = await AsyncStorage.getItem('user');
+        const token = await AsyncStorage.getItem("token");
+        const user = await AsyncStorage.getItem("user");
 
         if (token && user) {
           const parsedUser = JSON.parse(user);
-
-          if (parsedUser.role === 'admin') {
-            setInitialRoute('AdminStack');
-          } else if (parsedUser.role === 'resturant') {
-            setInitialRoute('ResturantStackNav');
-          } else if (parsedUser.role === 'charity') {
-            setInitialRoute('CharityStack');
-          } else {
-            setInitialRoute('AuthStack');
-          }
+          if (parsedUser.role === "admin") setInitialRoute("AdminStack");
+          else if (parsedUser.role === "restaurant") setInitialRoute("RestaurantStackNav");
+          else if (parsedUser.role === "charity") setInitialRoute("CharityStack");
+          else setInitialRoute("AuthStack");
         } else {
-          setInitialRoute('AuthStack');
+          setInitialRoute("AuthStack");
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (e) {
         console.warn(e);
-        setInitialRoute('AuthStack');
+        setInitialRoute("AuthStack");
       } finally {
         setAppIsReady(true);
       }
@@ -284,9 +238,7 @@ export default function App() {
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
+    if (appIsReady) await SplashScreen.hideAsync();
   }, [appIsReady]);
 
   if (!appIsReady || !initialRoute) {
@@ -303,7 +255,7 @@ export default function App() {
         <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
           <RootStack.Screen name="AuthStack" component={AuthStack} />
           <RootStack.Screen name="AdminStack" component={AdminScreen} />
-          <RootStack.Screen name="ResturantStackNav" component={ResturantStackNav} />
+          <RootStack.Screen name="RestaurantStackNav" component={RestaurantStackNav} />
           <RootStack.Screen name="CharityStack" component={CharityStack} />
         </RootStack.Navigator>
       </NavigationContainer>
@@ -311,26 +263,15 @@ export default function App() {
   );
 }
 
-
-
-
-
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center',
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center" },
   button: {
-    backgroundColor: 'blue',
+    backgroundColor: "blue",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
     marginTop: 20,
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
+  buttonText: { color: "white", fontSize: 16 },
+  title: { fontSize: 20, fontWeight: "bold" },
 });

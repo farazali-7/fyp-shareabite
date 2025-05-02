@@ -6,8 +6,10 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import { getUserDetailsById } from '../../apis/userAPI'; 
 
 export default function RViewProfileDetails() {
   const route = useRoute();
@@ -16,24 +18,23 @@ export default function RViewProfileDetails() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate API delay
-    setTimeout(() => {
-      const dummyUser = {
-        _id: userId,
-        userName: 'biryani_point',
-        email: 'biryani@foodie.pk',
-        contactNumber: '03001234567',
-        profileImage: 'https://i.pravatar.cc/150?img=12',
-        role: 'restaurant',
-        operatingHours: '10 AM - 10 PM',
-        cuisineType: 'Pakistani, BBQ',
-      };
-
-      setUserData(dummyUser);
+  const fetchUser = async () => {
+    try {
+      const response = await getUserDetailsById(userId);
+      setUserData(response.user);
+    } catch (error) {
+      console.error(' Failed to load user profile:', error);
+      Alert.alert('Error', 'Failed to load user profile.');
+    } finally {
       setLoading(false);
-    }, 1500);
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    if (userId){
+      fetchUser();
+    }
+  }, [userId]);
 
   if (loading) {
     return (
@@ -43,11 +44,19 @@ export default function RViewProfileDetails() {
     );
   }
 
+  if (!userData) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Text>No user data found.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Image
-          source={{ uri: userData.profileImage }}
+          source={{ uri: userData.profileImage || 'https://i.pravatar.cc/150?img=12' }}
           style={styles.profileImage}
         />
 

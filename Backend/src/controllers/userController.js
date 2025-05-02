@@ -1,8 +1,8 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
-
-
+import FoodPost from '../models/post.js';//Post
+import FoodRequest from '../models/request.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || "secretkey"; 
 
@@ -64,7 +64,16 @@ export const registerUser = async (req, res) => {
       licenseImage,
     });
 
-    await newUser.save();
+    const user = await newUser.save();
+
+    const notification = new Notification({
+      user: user._id,
+      title: "Thank you!",
+      message: "We welcome you to our application! Great to see you here!",
+      type: role
+    })
+
+    await notification.save();
 
     res.status(201).json({
       success: true,
@@ -199,82 +208,38 @@ export const resetPassword = async (req, res) => {
 };
 
 
-//Fetch user profile information and posts [Profile Page]
+//Fetch user profile information and posts 
+
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const posts = await Post.find({ user: user._id }).sort({ createdAt: -1 });
+    const posts = await FoodPost.find({ createdBy: user._id }).sort({ createdAt: -1 });
 
-    res.status(200).json({
-      user,
-      posts
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(200).json({ user, posts }); 
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
-
-
-//Edit Profile  [if role = restaurant then it will update cuisineType ]
-export const updateUserProfile = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      userName,
-      operatingHours,
-      cuisineType,
-    } = req.body;
-
-    const user = await User.findById(id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.userName = userName || user.userName;
-    user.operatingHours = operatingHours || user.operatingHours;
-
-  
-    if (user.role === "restaurant" && cuisineType) {
-      user.cuisineType = cuisineType;
-    }
-
-    // If new profile image uploaded
-    if (req.file) {
-      user.profileImage = `/uploads/${req.file.filename}`;
-    }
-
-    const updatedUser = await user.save();
-
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
+//Posts
 
 //search profiles 
 export const searchUsersProfile = async (req, res) => {
   const { query } = req.params;
   try {
-    const regex = new RegExp(query, 'i');
+    const regex = new RegExp(query, 'i'); 
     const results = await User.find({ userName: regex })
-      .select('_id userName profileImage');
+      .select('_id userName profileImage'); 
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-//  View Profile & Posts on the visting profile
+
+//  View Profile & Posts on the visting saerching profile
 export const getProfileAndPosts = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
@@ -312,5 +277,185 @@ export const toggleSubscribe = async (req, res) => {
     res.json({ message: 'Subscription updated.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+//own Profile Details
+export const userProfileDetails = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select(
+      'userName email contactNumber role profileImage operatingHours cuisineType'
+    );
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+//Edit Profile 
+// PUT /api/users/updateProfile/:id
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userName, operatingHours, cuisineType } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.userName = userName || user.userName;
+    user.operatingHours = operatingHours || user.operatingHours;
+
+    if (user.role === "restaurant" && cuisineType) {
+      user.cuisineType = cuisineType;
+    }
+
+    if (req.file) {
+      user.profileImage = `${req.file.path}`;
+    }
+
+    await user.save();
+    res.status(200).json({ message: "Profile updated", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+import Notification from "../models/notification.js";
+
+export const createPost = async (req, res) => {
+  try {
+    const {
+      foodType,
+      quantity,
+      bestBefore,
+      description,
+      createdBy,
+      latitude,
+      longitude,
+    } = req.body;
+
+    console.log(req.body)
+
+    // Validation
+    if (!foodType || !quantity || !bestBefore || !description || !createdBy) {
+      return res.status(400).json({ message: 'All required fields must be provided.' });
+    }
+
+    // Images check
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'At least one image is required.' });
+    }
+
+    // Map uploaded images
+    const foodImages = req.files.map(file => `/uploads/posts/${file.filename}`);
+
+    // Create and save post
+    const newPost = new FoodPost({
+      foodType,
+      quantity,
+      bestBefore: new Date(bestBefore),
+      description,
+      createdBy,
+      latitude,
+      longitude,
+      foodImages,
+    });
+
+    const savedPost = await newPost.save();
+
+    const resturant = await User.findById(createdBy)
+
+    const notification = new Notification({
+      user: null,
+      post: savedPost._id,
+      title: `${resturant.userName} posted!`,
+      description: `${foodType} with ${quantity} quantity have been posted by a resturant checkout to see what is there for you!`,
+      type: "charity"
+    })
+
+    const result = await notification.save();
+
+    console.log(result)
+
+    res.status(201).json({
+      message: 'Food post created successfully',
+      post: newPost,
+    });
+  } catch (err) {
+    console.error(' Post creation error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
+//food Request Details 
+// controllers/requestController.js
+export const requestFood = async (req, res) => {
+  try {
+    const { postId, requesterId, receiverId } = req.body;
+
+    // Using the correct Mongoose model: FoodRequest
+    const alreadyRequested = await FoodRequest.findOne({ postId, requesterId });
+
+    if (alreadyRequested) {
+      return res.status(400).json({ message: 'Already requested.' });
+    }
+
+    const newRequest = new FoodRequest({
+      postId,
+      requesterId,
+      receiverId,
+      status: 'pending',
+    });
+
+    await newRequest.save();
+
+    res.status(201).json({ message: 'Request sent successfully.', request: newRequest });
+  } catch (err) {
+    console.error(' Error creating request:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
+
+
+export const getCharityNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ type: 'charity' }).sort({ createdAt: -1 });
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error fetching charity notifications:', error);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+};
+
+//get all post for home page
+export const getAllPosts = async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .sort({ createdAt: -1 }) // latest first
+      .populate('userId', 'userName profileImage role'); // only include relevant user info
+
+    const formatted = posts.map((post) => ({
+      _id: post._id,
+      userName: post.userId?.userName || 'Unknown',
+      userImage: post.userId?.profileImage || '',
+      role: post.userId?.role,
+      foodType: post.foodType,
+      quantity: post.quantity,
+      bestBefore: post.bestBefore,
+      description: post.description,
+      images: post.foodImages,
+      location: post.location,
+    }));
+
+    res.status(200).json({ posts: formatted });
+  } catch (error) {
+    console.error('❌ Error fetching posts:', error);
+    res.status(500).json({ error: 'Failed to load posts' });
   }
 };

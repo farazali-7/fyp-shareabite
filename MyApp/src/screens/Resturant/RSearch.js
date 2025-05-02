@@ -1,78 +1,129 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, TextInput, FlatList, TouchableOpacity, Text, Image, StyleSheet,
+  View, Text, TextInput, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import { searchUsers } from '../../apis/userAPI';
 
-export default function RSearchScreen() {
+const RSearchScreen = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  // Live Search whnever Query Changes
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (query.trim() !== '') fetchResults();
-      else setResults([]); 
-    }, 300); 
+    const delaySearch = setTimeout(() => {
+      if (query.trim().length > 0) {
+        handleSearch();
+      } else {
+        setResults([]);
+      }
+    }, 300); // Debounce for better performance
 
-    return () => clearTimeout(delayDebounce);
+    return () => clearTimeout(delaySearch);
   }, [query]);
 
-  const fetchResults = async () => {
+  const handleSearch = async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/users/search/${query}`);
-      setResults(response.data);
-    } catch (error) {
-      console.error('Search error:', error.message);
+      setLoading(true);
+      const users = await searchUsers(query);
+      setResults(users);
+    } catch (err) {
+      console.error(' Search failed:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const visitProfile = (userId) => {
-    navigation.navigate('SearchViewProfileScreen', { userId });
-  };
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('SearchViewProfileScreen', { userId: item._id })}
+    >
+      <Image
+        source={{ uri: item.profileImage || 'https://i.pravatar.cc/150' }}
+        style={styles.avatar}
+      />
+      <View>
+        <Text style={styles.userName}>{item.userName}</Text>
+        {/* Optional: Show role */}
+        {/* <Text style={styles.roleText}>{item.role === 'restaurant' ? 'Eatery' : 'Charity'}</Text> */}
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Search users..."
+        placeholder="Search users"
+        placeholderTextColor="#999"
+        style={styles.input}
         value={query}
         onChangeText={setQuery}
-        style={styles.searchInput}
       />
-      <FlatList
-        data={results}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} onPress={() => visitProfile(item._id)}>
-            <Image source={{ uri: item.profileImage }} style={styles.avatar} />
-            <View>
-              <Text style={styles.userName}>{item.userName}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#000099" style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={results}
+          keyExtractor={(item) => item._id}
+          renderItem={renderItem}
+          ListEmptyComponent={
+            query.length > 0 ? <Text style={styles.emptyText}>No users found</Text> : null
+          }
+        />
+      )}
     </View>
   );
-}
+};
+
+export default RSearchScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12 },
-  searchInput: {
-    height: 44,
-    borderRadius: 10,
+  container: {
+    marginTop:25,
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 12,
+  },
+  input: {
+    height: 48,
+    borderRadius: 12,
     backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    marginTop: 20,
-    marginBottom: 10,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 6,
-    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 0.5,
+    borderColor: '#ccc',
   },
-  avatar: { width: 50, height: 50, borderRadius: 25 },
-  userName: { fontWeight: 'bold', fontSize: 16 },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+    borderWidth: 1.5,
+    borderColor: '#000099',
+  },
+  userName: {
+    fontSize: 16,
+    color: '#000',
+    fontWeight: '600',
+  },
+  roleText: {
+    fontSize: 12,
+    color: '#888',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 20,
+    fontSize: 16,
+  },
 });

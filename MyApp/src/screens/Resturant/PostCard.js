@@ -27,7 +27,7 @@ export default function PostCard({ post, currentUserId }) {
     Linking.openURL(url);
   };
 
-  // 📍 Check if post is still available
+  //check if post is still available
   const isAvailable = () => {
     const today = new Date();
     const bestBefore = new Date(post.bestBefore);
@@ -38,25 +38,25 @@ export default function PostCard({ post, currentUserId }) {
 
   return (
     <View style={styles.card}>
-      {/* 📍 Image Section */}
+      {/* Image Section */}
       <TouchableOpacity onPress={() => setVisible(true)}>
-        <Image source={{ uri: post.images[0] }} style={styles.image} />
+        <Image source={{ uri: `http://192.168.20.131:3003/${post.images[0]}` }} style={styles.image} />
       </TouchableOpacity>
 
       <ImageViewing
-        images={post.images.map(img => ({ uri: img }))}
+        images={post.images.map(img => ({ uri: `http://192.168.20.131:3003/${img}` }))}
         imageIndex={0}
         visible={visible}
         onRequestClose={() => setVisible(false)}
       />
 
-      {/* 📍 Post Details */}
+      {/*  Post Details */}
       <Text style={styles.detail}>Food Type: {post.foodType}</Text>
       <Text style={styles.detail}>Quantity: {post.quantity}</Text>
       <Text style={styles.detail}>Best Before: {post.bestBefore}</Text>
       <Text style={styles.detail}>Created At: {new Date(post.createdAt).toLocaleString()}</Text>
 
-      {/* 📍 Track Location */}
+      {/*  Track Location */}
       <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
         <MaterialIcons name="location-on" size={24} color="red" />
         <Text style={styles.trackText}>Track Location</Text>
