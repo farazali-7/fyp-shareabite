@@ -44,6 +44,8 @@ import CProfileScreen from "./src/screens/Charity/CProfile";
 import CEditProfileScreen from "./src/screens/Charity/CEditProfile";
 import CHistoryScreen from "./src/screens/Charity/CHistory";
 import CDrawerContent from "./src/screens/Charity/CDrawerContent";
+import CSearchViewProfileScreen from "./src/screens/Charity/CSearchViewProfile";
+import RContactUsScreen from "./src/screens/Resturant/RContactFile";
 
 
 /*const AdminStack = ()=>{
@@ -69,6 +71,8 @@ const RestaurantStackNav = () => {
       <Stack.Screen name="EditProfile" component={REditProfileScreen} />
       <Stack.Screen name="History" component={RHistoryScreen} />
       <Stack.Screen name="NewPost" component={RPost} />
+      <Stack.Screen name="ContactUs" component={RContactUsScreen} />
+      
     </Stack.Navigator>
   );
 };
@@ -146,8 +150,9 @@ const CharityStack = () => {
       <Stack.Screen name="Notification" component={CNotificationScreen} />
       <Stack.Screen name="Profile" component={CProfileScreen} />
       <Stack.Screen name="EditProfile" component={CEditProfileScreen} />
-      <Stack.Screen name="History" component={CHistoryScreen} />
-    </Stack.Navigator>
+      <Stack.Screen name="History" component={CHistoryScreen} /> 
+      <Stack.Screen name="SearchViewProfileScreen" component={CSearchViewProfileScreen} />
+      </Stack.Navigator>
   );
 };
 
@@ -187,7 +192,6 @@ const CharityDrawerNavigator = () => {
   );
 };
 
-// ✅ Auth Stack
 const AuthStack = () => {
   const Stack = createNativeStackNavigator();
   return (

@@ -9,9 +9,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const drawerList = [
   { icon: { name: 'profile', library: AntDesign }, label: 'Profile', navigateTo: 'Profile' },
   { icon: { name: 'edit', library: AntDesign }, label: 'EditProfile', navigateTo: 'EditProfile' },
-  { icon: { name: 'history', library: FontAwesome }, label: 'History', navigateTo: 'History' },
-  { icon: { name: 'sign-out', library: FontAwesome }, label: 'Logout', action: 'logout' }, // Logout as Action
+  { icon: { name: 'phone', library: FontAwesome }, label: 'Contact Us', navigateTo: 'ContactUs' },
+  { icon: { name: 'sign-out', library: FontAwesome }, label: 'Logout', action: 'logout' },
 ];
+
 
 const DrawerLayout = ({ icon, label, navigateTo, action }) => {
   const navigation = useNavigation();

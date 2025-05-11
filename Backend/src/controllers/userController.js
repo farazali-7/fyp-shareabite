@@ -436,15 +436,15 @@ export const getCharityNotifications = async (req, res) => {
 //get all post for home page
 export const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+    const posts = await FoodPost.find()
       .sort({ createdAt: -1 }) // latest first
-      .populate('userId', 'userName profileImage role'); // only include relevant user info
+      .populate('createdBy'); // only include relevant user info
 
     const formatted = posts.map((post) => ({
       _id: post._id,
-      userName: post.userId?.userName || 'Unknown',
-      userImage: post.userId?.profileImage || '',
-      role: post.userId?.role,
+      userName: post.createdBy?.userName || 'Unknown',
+      userImage: post.createdBy?.profileImage || '',
+      role: post.createdBy?.role,
       foodType: post.foodType,
       quantity: post.quantity,
       bestBefore: post.bestBefore,

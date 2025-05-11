@@ -50,19 +50,18 @@ export default function PostCard({ post, currentUserId }) {
         onRequestClose={() => setVisible(false)}
       />
 
-      {/*  Post Details */}
+<Text style={styles.detail}>Food Type: {post.userName}</Text>
+
       <Text style={styles.detail}>Food Type: {post.foodType}</Text>
       <Text style={styles.detail}>Quantity: {post.quantity}</Text>
       <Text style={styles.detail}>Best Before: {post.bestBefore}</Text>
       <Text style={styles.detail}>Created At: {new Date(post.createdAt).toLocaleString()}</Text>
 
-      {/*  Track Location */}
       <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
         <MaterialIcons name="location-on" size={24} color="red" />
         <Text style={styles.trackText}>Track Location</Text>
       </TouchableOpacity>
 
-      {/* 📍 Request Button */}
       {canRequest && (
         <TouchableOpacity style={styles.requestButton}>
           <Text style={{ color: '#fff', fontWeight: 'bold' }}>Request Food</Text>

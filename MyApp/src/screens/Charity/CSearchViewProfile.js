@@ -13,9 +13,8 @@ import {
 import { useRoute } from '@react-navigation/native';
 import { getUserDetailsById, subscribeToUser } from '../../apis/userAPI';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialIcons } from '@expo/vector-icons';
 
-const RSearchViewProfileScreen = () => {
+const CSearchViewProfileScreen = () => {
   const route = useRoute();
   const { userId } = route.params;
 
@@ -23,7 +22,6 @@ const RSearchViewProfileScreen = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
-  const [showContact, setShowContact] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,7 +57,7 @@ const RSearchViewProfileScreen = () => {
 
     try {
       await subscribeToUser(userId, loggedInUserId);
-      fetchUserProfile();
+      fetchUserProfile(); // Refresh subscription state
     } catch (err) {
       console.error(' Subscribe Error:', err);
       Alert.alert('Error', 'Subscription update failed');
@@ -101,12 +99,6 @@ const RSearchViewProfileScreen = () => {
         <Text style={styles.roleText}>Role: {displayRole}</Text>
         <Text style={styles.subscriberText}>{profile.subscribers?.length || 0} Subscribers</Text>
 
-        {/* Toggle contact number */}
-        <TouchableOpacity style={styles.contactRow} onPress={() => setShowContact(!showContact)}>
-          <MaterialIcons name="phone" size={20} color="#00CCCC" />
-          <Text style={styles.contactText}> {showContact ? profile.contactNumber : 'Tap to view contact'}</Text>
-        </TouchableOpacity>
-
         {userId !== loggedInUserId && (
           <TouchableOpacity style={styles.subscribeBtn} onPress={handleSubscribeToggle}>
             <Text style={styles.btnText}>
@@ -140,11 +132,11 @@ const RSearchViewProfileScreen = () => {
   );
 };
 
-export default RSearchViewProfileScreen;
+export default CSearchViewProfileScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 30,
+    marginTop:30,
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
@@ -184,17 +176,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000',
     marginTop: 6,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  contactText: {
-    fontSize: 14,
-    color: '#00CCCC',
-    marginLeft: 6,
-    textDecorationLine: 'underline',
   },
   subscribeBtn: {
     backgroundColor: '#00CCCC',
@@ -261,3 +242,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
+

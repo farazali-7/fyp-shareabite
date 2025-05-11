@@ -13,6 +13,7 @@ const RHomeScreen = () => {
   const loadPosts = async () => {
     try {
       const data = await fetchAllFoodPosts();
+      console.log(data)
       setPosts(data.posts); // or just data if you return array directly
     } catch (err) {
       console.error('❌ Failed to load posts:', err);
@@ -52,6 +53,7 @@ export default RHomeScreen;
 
 const styles = StyleSheet.create({
   container: {
+    marginTop:30,
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
