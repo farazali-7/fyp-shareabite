@@ -10,7 +10,7 @@ const firebaseConfig = {
   appId: "1:207541606307:android:84f1ebb6be9a67c71dac16"
 };
 
-// ✅ Only initialize if no app has been initialized yet
+// Initialize app only once
 const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 export default firebaseApp;

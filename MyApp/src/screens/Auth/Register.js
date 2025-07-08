@@ -60,7 +60,7 @@ export default function RegisterScreen({ navigation }) {
         licenseImage,
       });
     } catch (error) {
-      console.error("❌ Registration check failed:", error);
+      console.error(" Registration check failed:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };

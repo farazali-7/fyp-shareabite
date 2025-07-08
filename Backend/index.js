@@ -21,7 +21,7 @@ app.use(cors());
 app.use("/api/users", userRoutes);
 app.use("/uploads/posts", express.static(path.join(__dirname, "src/uploads"))); // Serve uploaded images
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3007;
 app.listen(PORT, '0.0.0.0', () => {
     console.log('Server running on port '+ PORT);
   });

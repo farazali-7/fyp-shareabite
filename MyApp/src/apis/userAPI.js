@@ -24,7 +24,9 @@ export const registerUser = async (formData) => {
     const res = await axiosInstance.post('/users/register', formData, config);
     return res.data;
   } catch (err) {
-    throw err.response?.data?.message || err.message || 'Something went wrong.';
+    const errorMessage =
+      err.response?.data?.message || err.message || 'Something went wrong.';
+    throw new Error(errorMessage); 
   }
 };
 

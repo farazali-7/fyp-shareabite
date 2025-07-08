@@ -24,10 +24,8 @@ export default function SetPasswordScreen({ route, navigation }) {
       return Alert.alert('Too Short', 'Password must be at least 6 characters');
     }
 
-    // Destructure the user data from previous screen
     const { role, userName, email, contactNumber, licenseImage } = route.params;
 
-    // ✅ Map role from display value to backend-accepted value
     const mappedRole =
       role === 'Eatery'
         ? 'restaurant'
@@ -42,12 +40,17 @@ export default function SetPasswordScreen({ route, navigation }) {
     formData.append('contactNumber', contactNumber);
     formData.append('password', password);
 
-    // ✅ Add license image file
     formData.append('licenseImage', {
       uri: licenseImage,
       type: 'image/jpeg',
       name: 'license.jpg',
     });
+
+    // ✅ Debugging: Log formData
+    console.log('Form Data Preview:');
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
     try {
       const res = await registerUser(formData);
@@ -56,7 +59,7 @@ export default function SetPasswordScreen({ route, navigation }) {
         { text: 'Go to Login', onPress: () => navigation.navigate('Login') },
       ]);
     } catch (err) {
-      console.error('❌ Registration Error:', err);
+      console.error('Registration Error:', err); // ✅ Will now log full Error
       Alert.alert('Registration Failed', err.message || 'Something went wrong');
     }
   };

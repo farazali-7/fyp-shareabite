@@ -53,7 +53,7 @@ export default RHomeScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:30,
+    marginTop:32,
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,

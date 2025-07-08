@@ -1,4 +1,4 @@
-// 3️⃣ OTPVerificationScreen.js — Step 2: Phone OTP
+// 3️⃣ OTPVerificationScreen.js – Step 2: Phone OTP
 import React, { useRef, useState, useEffect } from 'react';
 import { View, TextInput, Button, StyleSheet, Alert, Text } from 'react-native';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
@@ -8,93 +8,117 @@ import firebaseApp from '../../../firebaseConfig';
 const auth = getAuth(firebaseApp);
 
 export default function OTPVerificationScreen({ navigation, route }) {
-  const recaptchaVerifier = useRef(null);
+  const recaptchaRef = useRef(null);
   const [confirmation, setConfirmation] = useState(null);
   const [code, setCode] = useState('');
-  const { contactNumber, flow, ...restParams } = route.params;
+  const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(60);
   const [resendDisabled, setResendDisabled] = useState(true);
 
-  // Start countdown timer after sending OTP
+  const { contactNumber, flow, ...restParams } = route.params;
+
+  // Countdown timer logic
   const startTimer = () => {
     setResendDisabled(true);
     setTimer(60);
   };
 
-  // Decrease timer every second until it reaches 0
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-      return () => clearInterval(interval);
-    } else {
+    if (timer <= 0) {
       setResendDisabled(false);
+      return;
     }
+    const interval = setInterval(() => setTimer(t => t - 1), 1000);
+    return () => clearInterval(interval);
   }, [timer]);
 
-  // Automatically send OTP when screen loads
+  // Auto-send OTP after short delay to ensure reCAPTCHA is mounted
   useEffect(() => {
-    sendOTP();
+    const timeoutId = setTimeout(() => {
+      if (!confirmation && recaptchaRef.current) sendOTP();
+    }, 300);
+    return () => clearTimeout(timeoutId);
   }, []);
 
-  // Sends OTP using Firebase Auth
   const sendOTP = async () => {
     try {
-      if (!recaptchaVerifier.current) {
-        Alert.alert('Recaptcha not ready');
+      if (!contactNumber.startsWith('+')) {
+        Alert.alert('Phone number must include country code (e.g. +92...)');
         return;
       }
-      const confirmationResult = await signInWithPhoneNumber(auth, contactNumber, recaptchaVerifier.current);
-      setConfirmation(confirmationResult);
-      Alert.alert('OTP sent successfully');
+
+      if (!recaptchaRef.current) {
+        Alert.alert('reCAPTCHA not ready yet. Try again in a second.');
+        return;
+      }
+
+      console.log('Sending OTP to:', contactNumber);
+      const result = await signInWithPhoneNumber(auth, contactNumber, recaptchaRef.current);
+      setConfirmation(result);
+      Alert.alert('OTP sent successfully ✓');
       startTimer();
     } catch (e) {
-      console.log(e);
-      Alert.alert('Failed to send OTP');
+      console.error('OTP send error:', e);
+      Alert.alert('Failed to send OTP', e.message);
     }
   };
 
-  // Verifies the code entered by user
   const verifyOTP = async () => {
     if (!confirmation) {
       Alert.alert('OTP not sent yet. Please resend.');
       return;
     }
+
+    if (code.trim().length === 0) {
+      Alert.alert('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const result = await confirmation.confirm(code);
       const verifiedPhone = result.user.phoneNumber;
+      console.log(' Phone verified:', verifiedPhone);
 
       if (flow === 'register') {
         navigation.navigate('SetPassword', {
-          contactNumber :verifiedPhone,
-          ...restParams, // name, email, etc.
+          contactNumber: verifiedPhone,
+          ...restParams,
         });
       } else if (flow === 'forgot') {
         navigation.navigate('ResetPassword', {
-          contactNumber,
+          contactNumber: verifiedPhone,
         });
       }
-
-
     } catch (e) {
-      console.log(e);
-      Alert.alert('Invalid OTP');
+      console.error('OTP verification failed:', e);
+      Alert.alert('Invalid OTP. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Firebase reCAPTCHA modal must be shown before sending OTP */}
-      <FirebaseRecaptchaVerifierModal ref={recaptchaVerifier} firebaseConfig={firebaseApp.options} />
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaRef}
+        firebaseConfig={firebaseApp.options}
+      />
 
       <TextInput
         placeholder="Enter OTP"
         keyboardType="number-pad"
+        maxLength={6}
         style={styles.input}
         value={code}
         onChangeText={setCode}
       />
 
-      <Button title="Verify OTP" onPress={verifyOTP} />
+      <Button
+        title={loading ? 'Verifying...' : 'Verify OTP'}
+        onPress={verifyOTP}
+        disabled={loading}
+      />
 
       <View style={styles.resendContainer}>
         <Text style={styles.timerText}>
@@ -107,7 +131,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: { flex: 1, padding: 20, justifyContent: 'center' },
   input: { borderBottomWidth: 1, marginVertical: 10, padding: 8 },
   resendContainer: { marginTop: 20, alignItems: 'center' },
   timerText: { marginBottom: 8, fontSize: 14, color: '#555' },
