@@ -323,7 +323,6 @@ export const updateUserProfile = async (req, res) => {
 };
 
 
-import Notification from "../models/notification.js";
 
 export const createPost = async (req, res) => {
   try {
@@ -337,22 +336,21 @@ export const createPost = async (req, res) => {
       longitude,
     } = req.body;
 
-    console.log(req.body)
+    console.log("✅ Incoming post data:", req.body);
 
-    // Validation
     if (!foodType || !quantity || !bestBefore || !description || !createdBy) {
+      console.warn("❌ Missing required fields");
       return res.status(400).json({ message: 'All required fields must be provided.' });
     }
 
-    // Images check
     if (!req.files || req.files.length === 0) {
+      console.warn("❌ No images uploaded");
       return res.status(400).json({ message: 'At least one image is required.' });
     }
 
-    // Map uploaded images
     const foodImages = req.files.map(file => `/uploads/posts/${file.filename}`);
+    console.log("🖼️ Uploaded Images:", foodImages);
 
-    // Create and save post
     const newPost = new FoodPost({
       foodType,
       quantity,
@@ -364,31 +362,21 @@ export const createPost = async (req, res) => {
       foodImages,
     });
 
+    console.log("📝 Saving post...");
     const savedPost = await newPost.save();
 
-    const resturant = await User.findById(createdBy)
-
-    const notification = new Notification({
-      user: null,
-      post: savedPost._id,
-      title: `${resturant.userName} posted!`,
-      description: `${foodType} with ${quantity} quantity have been posted by a resturant checkout to see what is there for you!`,
-      type: "charity"
-    })
-
-    const result = await notification.save();
-
-    console.log(result)
+    console.log("✅ Post saved:", savedPost);
 
     res.status(201).json({
       message: 'Food post created successfully',
-      post: newPost,
+      post: savedPost,
     });
   } catch (err) {
-    console.error(' Post creation error:', err);
+    console.error('❌ Post creation error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
 
 
 //food Request Details 
@@ -423,34 +411,30 @@ export const requestFood = async (req, res) => {
 
 
 
-export const getCharityNotifications = async (req, res) => {
-  try {
-    const notifications = await Notification.find({ type: 'charity' }).sort({ createdAt: -1 });
-    res.status(200).json(notifications);
-  } catch (error) {
-    console.error('Error fetching charity notifications:', error);
-    res.status(500).json({ error: 'Failed to fetch notifications' });
-  }
-};
+
 
 //get all post for home page
 export const getAllPosts = async (req, res) => {
   try {
     const posts = await FoodPost.find()
       .sort({ createdAt: -1 }) // latest first
-      .populate('createdBy'); // only include relevant user info
+      .populate('createdBy', '_id userName role profileImage');
 
     const formatted = posts.map((post) => ({
       _id: post._id,
       userName: post.createdBy?.userName || 'Unknown',
       userImage: post.createdBy?.profileImage || '',
       role: post.createdBy?.role,
+      createdBy: post.createdBy?._id, //  FIX: Include this line
       foodType: post.foodType,
       quantity: post.quantity,
       bestBefore: post.bestBefore,
       description: post.description,
       images: post.foodImages,
-      location: post.location,
+      latitude: post.latitude,
+      longitude: post.longitude,
+      status: post.status, // Add this too if you're using it in frontend
+      createdAt: post.createdAt,
     }));
 
     res.status(200).json({ posts: formatted });

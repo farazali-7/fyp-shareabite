@@ -13,8 +13,7 @@ import {
   userProfileDetails,
   createPost,
   requestFood,
-  getAllPosts,
-  getCharityNotifications
+  getAllPosts
 } from "../controllers/userController.js";
 
 import upload from "../middlewares/uploadMiddleware.js";
@@ -77,7 +76,6 @@ router.post('/request', requestFood);
 // GET /api/posts/all
 router.get('/all', getAllPosts);
 
-router.get('/charityNotifications', getCharityNotifications)
 
 
 

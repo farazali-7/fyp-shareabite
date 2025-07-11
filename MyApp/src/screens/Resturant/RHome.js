@@ -1,20 +1,62 @@
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { FAB } from 'react-native-paper';
-import PostCard from './PostCard';
+import PostCard from '../Resturant/PostCard';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { fetchAllFoodPosts } from '../../apis/userAPI';
+import React, { useState } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet, 
+  Text,
+  ActivityIndicator,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const RHomeScreen = () => {
-  const navigation = useNavigation();
+ const navigation = useNavigation();
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserRole, setCurrentUserRole] = useState(null);
 
+  // 👤 Load current user ID and role
+  const loadUserData = async () => {
+    try {
+      const userString = await AsyncStorage.getItem('user');
+
+      if (userString) {
+        const user = JSON.parse(userString);
+        console.log('✅ Parsed user from AsyncStorage:', user);
+
+        const id = user._id;
+        const role = user.role;
+
+        setCurrentUserId(id);
+        setCurrentUserRole(role);
+
+        console.log('🧑 Loaded userId:', id);
+        console.log('🎭 Loaded userRole:', role);
+      } else {
+        console.log('❌ No user found in AsyncStorage.');
+      }
+    } catch (err) {
+      console.error('⚠️ Failed to load user data:', err);
+    }
+  };
+
+  // 🍱 Fetch all food posts
   const loadPosts = async () => {
     try {
       const data = await fetchAllFoodPosts();
-      console.log(data)
-      setPosts(data.posts); // or just data if you return array directly
+
+      console.log('📦 Fetched food posts:', data.posts?.length ?? 0);
+      if (data.posts && data.posts.length > 0) {
+        console.log('📝 First post sample:', data.posts[0]);
+      }
+
+      setPosts(data.posts);
     } catch (err) {
       console.error('❌ Failed to load posts:', err);
     } finally {
@@ -22,9 +64,14 @@ const RHomeScreen = () => {
     }
   };
 
+  // 🔄 Refresh data on screen focus
   useFocusEffect(
     React.useCallback(() => {
-      loadPosts(); // fetch on focus
+      const fetchData = async () => {
+        await loadUserData();
+        await loadPosts();
+      };
+      fetchData();
     }, [])
   );
 
@@ -32,32 +79,54 @@ const RHomeScreen = () => {
     navigation.navigate('NewPost');
   };
 
+  // ⏳ Loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#000099" style={{ marginTop: 30 }} />
+      </View>
+    );
+  }
+
+  // ✅ Render food post list
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#000099" style={{ marginTop: 30 }} />
-      ) : (
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <PostCard post={item} />}
-          ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No posts yet.</Text>}
-        />
-      )}
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => {
+          console.log('📤 Passing to PostCard → post:', item);
+          console.log('📤 Passing to PostCard → currentUserId:', currentUserId);
+          console.log('📤 Passing to PostCard → currentUserRole:', currentUserRole);
+          return (
+            <PostCard
+              post={item}
+              currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
+            />
+          );
+        }}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 20 }}>
+            No posts yet.
+          </Text>
+        }
+      />
+
       <FAB style={styles.fab} icon="plus" onPress={handleNewPost} />
     </View>
   );
+ 
 };
 
 export default RHomeScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:32,
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'green',
     paddingHorizontal: 10,
-    marginTop: 10,
+    marginTop: 32,
   },
   fab: {
     position: 'absolute',

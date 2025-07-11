@@ -145,7 +145,7 @@ export const requestFoodPost = async ({ postId, requesterId, receiverId }) => {
   }
 };
 
-export const getCharityNotifications = async () => {
+/*export const getCharityNotifications = async () => {
   try {
     const res = await axiosInstance.get('/users/charityNotifications');
     return res.data;
@@ -153,15 +153,19 @@ export const getCharityNotifications = async () => {
     console.log(err)
     throw err.response?.data?.message || 'Failed to fetch charity notifications';
   }
-};
+};*/
 
 //  Fetch all food posts for home screen
 export const fetchAllFoodPosts = async () => {
   try {
     const res = await axiosInstance.get('/users/all');
+
+    // ✅ Log full data from API
+   // console.log("✅ Full API data:", JSON.stringify(res.data.posts, null, 2));
+
     return res.data; 
   } catch (err) {
-    console.error(" Failed to fetch food posts:", err);
+    console.error("❌ Failed to fetch food posts:", err);
     throw err.response?.data?.message || 'Failed to fetch food posts.';
   }
 };

@@ -72,7 +72,7 @@ const RestaurantStackNav = () => {
       <Stack.Screen name="History" component={RHistoryScreen} />
       <Stack.Screen name="NewPost" component={RPost} />
       <Stack.Screen name="ContactUs" component={RContactUsScreen} />
-      
+
     </Stack.Navigator>
   );
 };
@@ -120,6 +120,8 @@ const AdminScreen = () => {
     try {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
+     
+
       navigation.reset({ index: 0, routes: [{ name: "AuthStack" }] });
     } catch (error) {
       console.error("Logout Error:", error);
@@ -150,9 +152,9 @@ const CharityStack = () => {
       <Stack.Screen name="Notification" component={CNotificationScreen} />
       <Stack.Screen name="Profile" component={CProfileScreen} />
       <Stack.Screen name="EditProfile" component={CEditProfileScreen} />
-      <Stack.Screen name="History" component={CHistoryScreen} /> 
+      <Stack.Screen name="History" component={CHistoryScreen} />
       <Stack.Screen name="SearchViewProfileScreen" component={CSearchViewProfileScreen} />
-      </Stack.Navigator>
+    </Stack.Navigator>
   );
 };
 

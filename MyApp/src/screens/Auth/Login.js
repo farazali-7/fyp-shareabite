@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loginUser } from "../../apis/userAPI"; 
+import { loginUser } from "../../apis/userAPI";
 
 export default function Login({ navigation }) {
   const [role, setRole] = useState(null);
@@ -25,8 +25,8 @@ export default function Login({ navigation }) {
       role === "Eatery"
         ? "restaurant"
         : role === "Charity House"
-        ? "charity"
-        : role;
+          ? "charity"
+          : role;
 
     try {
       const data = await loginUser({ email, password, role: mappedRole });
@@ -34,6 +34,7 @@ export default function Login({ navigation }) {
       if (data?.token && data?.user) {
         await AsyncStorage.setItem("token", data.token);
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
+        await AsyncStorage.setItem("userId", data.user._id);
 
         switch (data.user.role) {
           case "admin":
