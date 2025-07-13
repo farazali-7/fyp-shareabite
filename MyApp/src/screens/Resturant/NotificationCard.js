@@ -1,19 +1,20 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
 const RNotificationCard = ({ notification, onAccept, onReject }) => {
-  const { requester, post, createdAt } = notification;
-  
-  // Format the time (e.g., "2:30 PM")
-  const notificationTime = new Date(createdAt).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const { requester, post, createdAt, requestStatus } = notification;
+  const [localStatus, setLocalStatus] = useState(requestStatus);
 
-  // Format the date (e.g., "Jul 11")
-  const notificationDate = new Date(createdAt).toLocaleDateString([], {
-    month: 'short',
-    day: 'numeric'
+  useEffect(() => {
+    setLocalStatus(requestStatus);
+  }, [requestStatus]);
+
+  const dateObj = new Date(createdAt);
+  const notificationDate = dateObj.toLocaleDateString();
+  const notificationTime = dateObj.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
   });
 
   return (
@@ -21,13 +22,13 @@ const RNotificationCard = ({ notification, onAccept, onReject }) => {
       <View style={styles.header}>
         <View style={styles.userInfo}>
           {requester?.profileImage && (
-            <Image 
-              source={{ uri: requester.profileImage }} 
+            <Image
+              source={{ uri: requester.profileImage }}
               style={styles.profileImage}
             />
           )}
           <Text style={styles.requesterName}>
-            {requester?.userName || "Unknown User"}
+            {requester?.userName || 'Unknown User'}
           </Text>
         </View>
         <View style={styles.timeContainer}>
@@ -35,29 +36,52 @@ const RNotificationCard = ({ notification, onAccept, onReject }) => {
           <Text style={styles.dateText}>{notificationDate}</Text>
         </View>
       </View>
-      
+
       <Text style={styles.body}>Requested your food post:</Text>
-      <Text style={styles.foodDetails}>{post?.foodType} (Quantity: {post?.quantity})</Text>
-      
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={styles.acceptBtn}
-          onPress={() => onAccept(notification._id)}
-        >
-          <Text style={styles.btnText}>Accept</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.rejectBtn}
-          onPress={() => onReject(notification._id)}
-        >
-          <Text style={styles.btnText}>Reject</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.foodDetails}>
+        {post?.foodType} (Quantity: {post?.quantity})
+      </Text>
+
+      {localStatus !== 'accepted' && localStatus !== 'rejected' && (
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.acceptBtn}
+            onPress={() => {
+              onAccept(notification._id);
+              setLocalStatus('accepted');
+            }}
+          >
+            <Text style={styles.btnText}>Accept</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.rejectBtn}
+            onPress={() => {
+              onReject(notification._id);
+              setLocalStatus('rejected');
+            }}
+          >
+            <Text style={styles.btnText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {localStatus === 'accepted' && (
+        <Text style={{ color: 'green', fontWeight: 'bold', marginTop: 8 }}>
+           Accepted
+        </Text>
+      )}
+
+      {localStatus === 'rejected' && (
+        <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 8 }}>
+           Rejected
+        </Text>
+      )}
     </View>
   );
 };
 
 export default RNotificationCard;
+
 
 const styles = StyleSheet.create({
   card: {
@@ -86,7 +110,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
-    backgroundColor: '#f0f0f0', // Fallback color
+    backgroundColor: '#f0f0f0',
   },
   requesterName: {
     fontWeight: 'bold',
@@ -142,3 +166,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+
+
+
+
+

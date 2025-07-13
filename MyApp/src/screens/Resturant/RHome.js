@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import {
   View,
   FlatList,
-  StyleSheet, 
+  StyleSheet,
   Text,
   ActivityIndicator,
 } from 'react-native';
@@ -14,21 +14,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const RHomeScreen = () => {
- const navigation = useNavigation();
+  const navigation = useNavigation();
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
 
-  // 👤 Load current user ID and role
+  //  Load current user ID and role
   const loadUserData = async () => {
     try {
       const userString = await AsyncStorage.getItem('user');
 
       if (userString) {
         const user = JSON.parse(userString);
-        console.log('✅ Parsed user from AsyncStorage:', user);
+        //console.log(' Parsed user from AsyncStorage:', user);
 
         const id = user._id;
         const role = user.role;
@@ -36,35 +36,33 @@ const RHomeScreen = () => {
         setCurrentUserId(id);
         setCurrentUserRole(role);
 
-        console.log('🧑 Loaded userId:', id);
-        console.log('🎭 Loaded userRole:', role);
+        // console.log(' Loaded userId:', id);
       } else {
-        console.log('❌ No user found in AsyncStorage.');
+        console.log(' No user found in AsyncStorage.');
       }
     } catch (err) {
-      console.error('⚠️ Failed to load user data:', err);
+      console.error(' Failed to load user data:', err);
     }
   };
 
-  // 🍱 Fetch all food posts
+  //  Fetch all food posts
   const loadPosts = async () => {
     try {
       const data = await fetchAllFoodPosts();
 
-      console.log('📦 Fetched food posts:', data.posts?.length ?? 0);
+      // console.log(' Fetched food posts:', data.posts?.length ?? 0);
       if (data.posts && data.posts.length > 0) {
-        console.log('📝 First post sample:', data.posts[0]);
       }
 
       setPosts(data.posts);
     } catch (err) {
-      console.error('❌ Failed to load posts:', err);
+      console.error(' Failed to load posts:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔄 Refresh data on screen focus
+  //  Refresh data on screen focus
   useFocusEffect(
     React.useCallback(() => {
       const fetchData = async () => {
@@ -79,7 +77,7 @@ const RHomeScreen = () => {
     navigation.navigate('NewPost');
   };
 
-  // ⏳ Loading state
+  //  Loading state
   if (loading) {
     return (
       <View style={styles.container}>
@@ -88,16 +86,16 @@ const RHomeScreen = () => {
     );
   }
 
-  // ✅ Render food post list
+  //  Render food post list
   return (
     <View style={styles.container}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
-          console.log('📤 Passing to PostCard → post:', item);
-          console.log('📤 Passing to PostCard → currentUserId:', currentUserId);
-          console.log('📤 Passing to PostCard → currentUserRole:', currentUserRole);
+          //   console.log(' Passing to PostCard → post:', item);
+          //  console.log(' Passing to PostCard → currentUserId:', currentUserId);
+          // console.log(' Passing to PostCard → currentUserRole:', currentUserRole);
           return (
             <PostCard
               post={item}
@@ -116,7 +114,7 @@ const RHomeScreen = () => {
       <FAB style={styles.fab} icon="plus" onPress={handleNewPost} />
     </View>
   );
- 
+
 };
 
 export default RHomeScreen;

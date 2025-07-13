@@ -20,14 +20,13 @@ const CHomeScreen = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
 
-  // 👤 Load current user ID and role
+  //  Load current user ID and role
   const loadUserData = async () => {
     try {
       const userString = await AsyncStorage.getItem('user');
 
       if (userString) {
         const user = JSON.parse(userString);
-      //  console.log('✅ Parsed user from AsyncStorage:', user);
 
         const id = user._id;
         const role = user.role;
@@ -44,25 +43,24 @@ const CHomeScreen = () => {
     }
   };
 
-  // 🍱 Fetch all food posts
+  //  Fetch all food posts
   const loadPosts = async () => {
     try {
       const data = await fetchAllFoodPosts();
 
-      console.log('📦 Fetched food posts:', data.posts?.length ?? 0);
+      //console.log(' Fetched food posts:', data.posts?.length ?? 0);
       if (data.posts && data.posts.length > 0) {
-      //  console.log('📝 First post sample:', data.posts[0]);
       }
 
       setPosts(data.posts);
     } catch (err) {
-      console.error('❌ Failed to load posts:', err);
+      console.error(' Failed to load posts:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔄 Refresh data on screen focus
+  //  Refresh data on screen focus
   useFocusEffect(
     React.useCallback(() => {
       const fetchData = async () => {
@@ -77,7 +75,7 @@ const CHomeScreen = () => {
     navigation.navigate('NewPost');
   };
 
-  // ⏳ Loading state
+  //  Loading state
   if (loading) {
     return (
       <View style={styles.container}>
@@ -86,16 +84,14 @@ const CHomeScreen = () => {
     );
   }
 
-  // ✅ Render food post list
+  //  Render food post list
   return (
     <View style={styles.container}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
-       /*   console.log('📤 Passing to PostCard → post:', item);
-          console.log('📤 Passing to PostCard → currentUserId:', currentUserId);
-          console.log('📤 Passing to PostCard → currentUserRole:', currentUserRole);*/
+      
           return (
             <PostCard
               post={item}

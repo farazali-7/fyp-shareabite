@@ -18,9 +18,9 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
   const [visible, setVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
 
-/*  console.log("🧑 Current userId:", currentUserId);
-console.log("🎭 Current userRole:", currentUserRole);
-console.log("📦 Post createdBy:", post.createdBy);*/
+/*  console.log(" Current userId:", currentUserId);
+console.log(" Current userRole:", currentUserRole);
+console.log(" Post createdBy:", post.createdBy);*/
 
   useEffect(() => {
     (async () => {
@@ -39,7 +39,7 @@ console.log("📦 Post createdBy:", post.createdBy);*/
     })();
   }, []);
 
-  // 🗺️ Open in Google Maps
+  //  Open in Google Maps
   const openGoogleMaps = () => {
     if (!userLocation || !post.latitude || !post.longitude) {
       Alert.alert('Location Error', 'Location data missing.');
@@ -51,7 +51,7 @@ console.log("📦 Post createdBy:", post.createdBy);*/
     Linking.openURL(url);
   };
 
-  // 📆 Check if post is available
+  //  Check if post is available
   const isAvailable = () => {
     const today = new Date();
     const bestBefore = new Date(post.bestBefore);
@@ -67,7 +67,7 @@ const handleRequest = async () => {
   try {
     if (!post._id || !post.createdBy || !currentUserId) {
       Alert.alert("Missing Info", "Post or user data is missing.");
-      console.warn("⚠️ Missing post._id, post.createdBy, or currentUserId", {
+      console.warn(" Missing post._id, post.createdBy, or currentUserId", {
         postId: post._id,
         createdBy: post.createdBy,
         currentUserId,
@@ -75,7 +75,7 @@ const handleRequest = async () => {
       return;
     }
 
-    console.log("📤 Sending API request to backend with:", {
+    console.log(" Sending API request to backend with:", {
       postId: post._id,
       requesterId: currentUserId,
       receiverId: post.createdBy,
@@ -87,7 +87,7 @@ const handleRequest = async () => {
       receiverId: post.createdBy,
     });
 
-    console.log("✅ Request successfully saved in DB:", res);
+    console.log(" Request successfully saved in DB:", res);
 
     socket.emit("request_food", {
       postId: post._id,
@@ -95,7 +95,7 @@ const handleRequest = async () => {
       receiverId: post.createdBy,
     });
 
-    console.log("📡 Emitted request_food to socket:", {
+    console.log(" Emitted request_food to socket:", {
       postId: post._id,
       requesterId: currentUserId,
       receiverId: post.createdBy,
@@ -103,7 +103,7 @@ const handleRequest = async () => {
 
     Alert.alert("Request Sent", "Your food request has been sent.");
   } catch (err) {
-    console.error("❌ Failed to create food request:", err.response?.data || err.message);
+    console.error(" Failed to create food request:", err.response?.data || err.message);
     Alert.alert("Error", "Something went wrong. Please try again.");
   }
 };
@@ -111,7 +111,7 @@ const handleRequest = async () => {
 
   return (
     <View style={styles.card}>
-      {/* 📸 Post Image */}
+      {/*  Post Image */}
       <TouchableOpacity onPress={() => setVisible(true)}>
         <Image
           source={{ uri: `http://192.168.20.131:3003/${post.images[0]}` }}
@@ -128,7 +128,7 @@ const handleRequest = async () => {
         onRequestClose={() => setVisible(false)}
       />
 
-      {/* 📝 Details */}
+      {/*  Details */}
       <Text style={styles.detail}>User: {post.userName}</Text>
       <Text style={styles.detail}>Food Type: {post.foodType}</Text>
       <Text style={styles.detail}>Quantity: {post.quantity}</Text>
@@ -137,15 +137,15 @@ const handleRequest = async () => {
         Created At: {new Date(post.createdAt).toLocaleString()}
       </Text>
 
-      {/* 📍 Location Button */}
+      {/*  Location Button */}
       <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
         <MaterialIcons name="location-on" size={24} color="red" />
         <Text style={styles.trackText}>Track Location</Text>
       </TouchableOpacity>
 
-      {/* ✅ Request / 🍱 Picked */}
+      {/*  Request /  Picked */}
       {post.status === 'fulfilled' ? (
-        <Text style={styles.pickedText}>🍱 Food Picked</Text>
+        <Text style={styles.pickedText}> Food Picked</Text>
       ) : (
         canRequest && (
           <TouchableOpacity style={styles.requestButton} onPress={handleRequest}>
@@ -154,7 +154,6 @@ const handleRequest = async () => {
         )
       )}
 
-      {/* 🧾 Description */}
       <Text style={styles.description}>{post.description}</Text>
     </View>
   );

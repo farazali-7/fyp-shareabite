@@ -26,6 +26,9 @@ const io = new Server(server, {
 });
 
 
+app.set('io', io);
+
+
 
 // Convert `__dirname` for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -51,7 +54,7 @@ app.use('/api/requests', requestRoutes);
 
 // Socket.IO logic
 io.on("connection", (socket) => {
-  console.log("✅ Socket connected:", socket.id);
+  console.log(" Socket connected:", socket.id);
 
   // Join post room
   socket.on("join_post_room", (postId) => {

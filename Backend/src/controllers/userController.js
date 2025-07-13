@@ -336,15 +336,14 @@ export const createPost = async (req, res) => {
       longitude,
     } = req.body;
 
-    console.log("✅ Incoming post data:", req.body);
 
     if (!foodType || !quantity || !bestBefore || !description || !createdBy) {
-      console.warn("❌ Missing required fields");
+      console.warn(" Missing required fields");
       return res.status(400).json({ message: 'All required fields must be provided.' });
     }
 
     if (!req.files || req.files.length === 0) {
-      console.warn("❌ No images uploaded");
+      console.warn(" No images uploaded");
       return res.status(400).json({ message: 'At least one image is required.' });
     }
 
@@ -362,17 +361,17 @@ export const createPost = async (req, res) => {
       foodImages,
     });
 
-    console.log("📝 Saving post...");
+   
     const savedPost = await newPost.save();
 
-    console.log("✅ Post saved:", savedPost);
+    console.log(" Post saved:", savedPost);
 
     res.status(201).json({
       message: 'Food post created successfully',
       post: savedPost,
     });
   } catch (err) {
-    console.error('❌ Post creation error:', err);
+    console.error(' Post creation error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -439,7 +438,7 @@ export const getAllPosts = async (req, res) => {
 
     res.status(200).json({ posts: formatted });
   } catch (error) {
-    console.error('❌ Error fetching posts:', error);
+    console.error(' Error fetching posts:', error);
     res.status(500).json({ error: 'Failed to load posts' });
   }
 };

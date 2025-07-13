@@ -8,9 +8,9 @@ const NotificationSchema = new mongoose.Schema(
       ref: "User", // Notification recipient
       required: true,
     },
-    requester: { // sender (charity)
+    requester: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "User", // sender
     },
     post: {
       type: mongoose.Schema.Types.ObjectId,
@@ -27,7 +27,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["request", "accepted", "general"],
+      enum: ["request", "accepted", "rejected", "general"], //  added "rejected"
       default: "general",
     },
     isRead: {

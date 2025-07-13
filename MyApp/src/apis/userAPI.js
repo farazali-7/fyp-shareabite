@@ -160,12 +160,11 @@ export const fetchAllFoodPosts = async () => {
   try {
     const res = await axiosInstance.get('/users/all');
 
-    // ✅ Log full data from API
-   // console.log("✅ Full API data:", JSON.stringify(res.data.posts, null, 2));
+
 
     return res.data; 
   } catch (err) {
-    console.error("❌ Failed to fetch food posts:", err);
+    console.error(" Failed to fetch food posts:", err);
     throw err.response?.data?.message || 'Failed to fetch food posts.';
   }
 };

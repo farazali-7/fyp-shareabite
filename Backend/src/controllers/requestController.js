@@ -1,5 +1,6 @@
 // controllers/requestController.js
 import FoodRequest from '../models/request.js';
+import FoodPost from '../models/post.js'
 import User from '../models/user.js';
 import Notification from '../models/notification.js';
 import mongoose from 'mongoose';
@@ -41,79 +42,223 @@ await Notification.create({
   }
 };
 
-/*
-export const getRequestedNotifications = async (req, res) => {
-  console.log("🧪 API hit with userId:", req.params.userId);
 
-  try {
-    const notifications = await Notification.find({ user: req.params.userId })
-           .populate({
-        path: 'requester',
-        select: 'userName profileImage role', // These must match UserSchema
-        model: 'User' // Explicitly specify the model
-      })
-      .populate('post', 'foodType quantity createdAt')
-         
-      .sort({ createdAt: -1 }); 
-    res.json(notifications);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching notifications' });
-  }
-};
-*/
-export const getRequestedNotifications = async (req, res) => {
-  console.log("🧪 API hit with userId:", req.params.userId);
 
+
+
+export const getRequestedNotifications = async (req, res) => {
   try {
-    console.log("1. Starting notification query...");
+
+    // Fetch all notifications for the current user (receiver)
     const notifications = await Notification.find({ user: req.params.userId })
       .populate({
         path: 'requester',
         select: 'userName profileImage role',
         model: 'User'
       })
-      .populate('post', 'foodType quantity createdAt')
+      .populate({
+        path: 'post',
+        select: 'foodType quantity createdAt',
+        model: 'FoodPost'
+      })
       .sort({ createdAt: -1 });
 
-    console.log("\n2. Query completed. Checking results...");
-    console.log("   Notifications found:", notifications.length);
-    
-    if (notifications.length > 0) {
-      console.log("\n3. First notification details:");
-      const firstNotif = notifications[0].toObject();
-      console.log("   - Notification ID:", firstNotif._id);
-      console.log("   - Requester field type:", typeof firstNotif.requester);
-      
-      if (firstNotif.requester) {
-        console.log("   - Requester content:", firstNotif.requester);
-        console.log("   - Is requester populated?", 
-          firstNotif.requester instanceof mongoose.Document ? 'Yes' : 'No');
-      } else {
-        console.log("   - Requester is null/undefined");
+
+    // Add requestStatus for each notification
+    const enrichedNotifications = await Promise.all(
+      notifications.map(async (notif) => {
+        let requestStatus = 'pending';
+
+        if (notif.post && notif.requester) {
+          const request = await FoodRequest.findOne({
+            postId: notif.post._id,
+            requesterId: notif.requester._id
+          }).select('status');
+
+          if (request) {
+            requestStatus = request.status;
+          }
+        }
+
+        return {
+          ...notif.toObject(),
+          requestStatus,
+        };
+      })
+    );
+
+    if (enrichedNotifications.length > 0) {
+//
+    }
+
+    res.json(enrichedNotifications);
+
+  } catch (err) {
+    console.error("\n Error in getRequestedNotifications:", err);
+    res.status(500).json({
+      message: 'Error fetching notifications',
+      error: err.message
+    });
+  }
+};
+
+
+
+export const acceptRequest = async (req, res) => {
+  try {
+    const { postId, requesterId, notificationId } = req.body;
+    const io = req.app.get('io');
+
+    console.log(' Accept Request Payload:', { postId, requesterId, notificationId });
+
+    if (!postId || !requesterId || !notificationId) {
+      console.error(' Missing required fields');
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // 1. Accept the current request
+    const acceptedRequest = await FoodRequest.findOneAndUpdate(
+      { postId, requesterId },
+      { status: 'accepted' },
+      { new: true }
+    );
+
+
+    if (!acceptedRequest) {
+      console.error(' Request not found for update');
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    // 2. Reject all other requests for this post
+    const rejectedRequests = await FoodRequest.find({
+      postId,
+      requesterId: { $ne: requesterId }
+    });
+
+
+    await FoodRequest.updateMany(
+      { postId, requesterId: { $ne: requesterId } },
+      { status: 'rejected' }
+    );
+
+    // 3. Update notification status to 'accepted'
+    const updatedNotification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { type: 'accepted' },
+      { new: true }
+    );
+
+
+    // 4. Fulfill the food post
+    const updatedPost = await FoodPost.findByIdAndUpdate(postId, { status: 'fulfilled' });
+    console.log(' Food post marked as fulfilled:', updatedPost);
+
+    // 5. Get post & restaurant details
+    const post = await FoodPost.findById(postId).select('foodType');
+    const restaurant = await User.findById(acceptedRequest.receiverId).select('userName');
+
+    console.log(' Post Info:', post);
+    console.log(' Restaurant Info:', restaurant);
+
+    // 6. Notify requester (charity)
+    const acceptedCharityNotification = await new Notification({
+      user: requesterId,
+      requester: acceptedRequest.receiverId,
+      post: postId,
+      title: 'Request Accepted',
+      type: 'accepted',
+      description: `Your request for ${post?.foodType || 'food'} was  accepted by ${restaurant?.userName || 'Restaurant'}.`,
+    }).save();
+
+    console.log(' Created acceptance notification for requester:', acceptedCharityNotification);
+
+    io.to(requesterId.toString()).emit('charity_notification', {
+      postId,
+      type: 'accepted',
+      message: ` Accepted by ${restaurant?.userName || 'Restaurant'} for ${post?.foodType}`,
+    });
+
+    // 7. Notify rejected users
+    for (const rejected of rejectedRequests) {
+      const userId = rejected?.requesterId?.toString();
+      if (!userId) {
+        console.warn(' Skipping invalid rejected requester:', rejected);
+        continue;
       }
 
-      console.log("\n4. Checking User model reference:");
-      console.log("   - Notification schema requester ref:", 
-        Notification.schema.path('requester').options.ref);
+      const rejectedNotification = await new Notification({
+        user: userId,
+        requester: acceptedRequest.receiverId,
+        post: postId,
+        title: 'Request Rejected',
+        type: 'rejected',
+        description: `Your request for ${post?.foodType || 'food'} was  rejected by ${restaurant?.userName || 'Restaurant'}.`,
+      }).save();
+
+      console.log(` Created rejection notification for user ${userId}:`, rejectedNotification);
+
+      io.to(userId).emit('charity_notification', {
+        postId,
+        type: 'rejected',
+        message: ` Rejected by ${restaurant?.userName || 'Restaurant'} for ${post?.foodType}`,
+      });
     }
 
-    console.log("\n5. Verifying User model exists:");
-    try {
-      const userModel = mongoose.model('User');
-      console.log("   - User model found:", !!userModel);
-      const testUser = await userModel.findOne().select('userName').lean();
-      console.log("   - Test user found:", testUser ? 'Yes' : 'No');
-    } catch (err) {
-      console.log("   - Error accessing User model:", err.message);
-    }
-
-    res.json(notifications);
+    res.status(200).json({ message: 'Request accepted successfully' });
   } catch (err) {
-    console.error("\n❌ Error in getRequestedNotifications:", err);
-    res.status(500).json({ 
-      message: 'Error fetching notifications',
-      error: err.message 
+    console.error(' Accept request error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+
+
+export const rejectRequest = async (req, res) => {
+  const { postId, requesterId, notificationId } = req.body;
+  const io = req.app.get("io");
+
+  try {
+    const updatedRequest = await FoodRequest.findOneAndUpdate(
+      { postId, requesterId },
+      { status: 'rejected' },
+      { new: true }
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    // Update notification
+    await Notification.findByIdAndUpdate(notificationId, {
+      type: 'rejected',
     });
+
+    // Fetch post & restaurant details
+    const post = await FoodPost.findById(postId).select('foodType');
+    const restaurant = await User.findById(updatedRequest.receiverId).select('userName');
+
+    // Create charity-side notification
+    const charityNotification = await new Notification({
+      user: requesterId,
+      requester: updatedRequest.receiverId,
+      post: postId,
+      title: 'Request Rejected',
+      type: 'rejected',
+      description: `Your request for ${post?.foodType || 'a food item'} was  rejected by ${restaurant?.userName || 'Restaurant'}.`,
+    }).save();
+
+
+    // Emit to charity
+    io.to(requesterId.toString()).emit('charity_notification', {
+      postId,
+      type: 'rejected',
+      message: ` Rejected by ${restaurant?.userName || 'Restaurant'} for ${post?.foodType}`,
+    });
+
+    res.status(200).json({ message: 'Request rejected.' });
+  } catch (err) {
+    console.error('Reject request error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -121,3 +266,29 @@ export const getRequestedNotifications = async (req, res) => {
 
 
 
+
+
+
+
+
+//charity Notification
+export const getCharityNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ user: req.params.userId })
+      .populate({
+        path: 'requester',
+        select: 'userName profileImage',
+      })
+      .populate({
+        path: 'post',
+        select: 'foodType quantity createdAt',
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(notifications);
+
+  } catch (err) {
+    console.error('Error in getCharityNotifications:', err);
+    res.status(500).json({ error: 'Failed to fetch charity notifications.' });
+  }
+};
