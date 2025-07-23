@@ -14,8 +14,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { SocketProvider } from "./src/context/SocketContext";
 
-// ✅ Auth Screens
+//  Auth Screens
 import Login from "./src/screens/Auth/Login";
 import RegisterScreen from "./src/screens/Auth/Register";
 import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
@@ -23,7 +24,7 @@ import SetPasswordScreen from "./src/screens/Auth/SetPassword";
 import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
 import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
 
-// ✅ Restaurant Screens
+//  Restaurant Screens
 import RHomeScreen from "./src/screens/Resturant/RHome";
 import RSearchScreen from "./src/screens/Resturant/RSearch";
 import RNotificationScreen from "./src/screens/Resturant/RNotification";
@@ -35,8 +36,11 @@ import RDrawerContent from "./src/screens/Resturant/RDrawerContent";
 import EditPostScreen from "./src/screens/Resturant/REditPostScreen";
 import RViewProfileDetails from "./src/screens/Resturant/RViewProfileDetails";
 import RSearchViewProfileScreen from "./src/screens/Resturant/RSearchViewProfile";
+import RChatListScreen from "./src/screens/Resturant/RChatScreens/RChatListScreen";
+import RChatScreen from "./src/screens/Resturant/RChatScreens/RChatScreen";
+import RSearchUsersScreen from "./src/screens/Resturant/RChatScreens/RSearchUsersScreen";
 
-// ✅ Charity Screens
+//  Charity Screens
 import CHomeScreen from "./src/screens/Charity/CHome";
 import CSearchScreen from "./src/screens/Charity/CSearch";
 import CNotificationScreen from "./src/screens/Charity/CNotification";
@@ -46,6 +50,9 @@ import CHistoryScreen from "./src/screens/Charity/CHistory";
 import CDrawerContent from "./src/screens/Charity/CDrawerContent";
 import CSearchViewProfileScreen from "./src/screens/Charity/CSearchViewProfile";
 import RContactUsScreen from "./src/screens/Resturant/RContactFile";
+import CChatListScreen from "./src/screens/Charity/CChatScreens/CChatListScreen";
+import CSearchUsersScreen from "./src/screens/Charity/CChatScreens/CSearchUsersScreen";
+import CChatScreen from "./src/screens/Charity/CChatScreens/CChatScreen";
 
 
 /*const AdminStack = ()=>{
@@ -72,6 +79,9 @@ const RestaurantStackNav = () => {
       <Stack.Screen name="History" component={RHistoryScreen} />
       <Stack.Screen name="NewPost" component={RPost} />
       <Stack.Screen name="ContactUs" component={RContactUsScreen} />
+         <Stack.Screen name="RestaurantChatList" component={RChatListScreen} />
+      <Stack.Screen name="RestaurantChat" component={RChatScreen} />
+      <Stack.Screen name="RestaurantChatSearch" component={RSearchUsersScreen} />
 
     </Stack.Navigator>
   );
@@ -96,7 +106,7 @@ const RestaurantTabs = () => {
       })}
       initialRouteName="Home"
     >
-      <Tab.Screen name="Home" component={RHomeScreen} />
+      <Tab.Screen name="Home" component={RHomeScreen} options={{ headerShown: true }}/>
       <Tab.Screen name="Search" component={RSearchScreen} />
       <Tab.Screen name="Notification" component={RNotificationScreen} />
       <Tab.Screen name="Profile" component={RestaurantDrawerNavigator} />
@@ -120,7 +130,7 @@ const AdminScreen = () => {
     try {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
-     
+
 
       navigation.reset({ index: 0, routes: [{ name: "AuthStack" }] });
     } catch (error) {
@@ -142,7 +152,7 @@ const AdminScreen = () => {
   );
 };
 
-// ✅ Charity Stack Navigator
+//  Charity Stack Navigator
 const CharityStack = () => {
   const Stack = createNativeStackNavigator();
   return (
@@ -154,6 +164,11 @@ const CharityStack = () => {
       <Stack.Screen name="EditProfile" component={CEditProfileScreen} />
       <Stack.Screen name="History" component={CHistoryScreen} />
       <Stack.Screen name="SearchViewProfileScreen" component={CSearchViewProfileScreen} />
+      <Stack.Screen name="CharityChatList" component={CChatListScreen} />
+      <Stack.Screen name="CharityChat" component={CChatScreen} />
+      <Stack.Screen name="CharityChatSearch" component={CSearchUsersScreen} />
+
+
     </Stack.Navigator>
   );
 };
@@ -177,7 +192,7 @@ const CharityTabs = () => {
       })}
       initialRouteName="Home"
     >
-      <Tab.Screen name="Home" component={CHomeScreen} />
+      <Tab.Screen name="Home" component={CHomeScreen} options={{ headerShown: true }} />
       <Tab.Screen name="Search" component={CSearchScreen} />
       <Tab.Screen name="Notification" component={CNotificationScreen} />
       <Tab.Screen name="Profile" component={CharityDrawerNavigator} />
@@ -208,7 +223,7 @@ const AuthStack = () => {
   );
 };
 
-// ✅ Root Stack
+//  Root Stack
 const RootStack = createNativeStackNavigator();
 
 export default function App() {
@@ -256,16 +271,18 @@ export default function App() {
   }
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <NavigationContainer>
-        <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
-          <RootStack.Screen name="AuthStack" component={AuthStack} />
-          <RootStack.Screen name="AdminStack" component={AdminScreen} />
-          <RootStack.Screen name="RestaurantStackNav" component={RestaurantStackNav} />
-          <RootStack.Screen name="CharityStack" component={CharityStack} />
-        </RootStack.Navigator>
-      </NavigationContainer>
-    </View>
+    <SocketProvider>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <NavigationContainer>
+          <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+            <RootStack.Screen name="AuthStack" component={AuthStack} />
+            <RootStack.Screen name="AdminStack" component={AdminScreen} />
+            <RootStack.Screen name="RestaurantStackNav" component={RestaurantStackNav} />
+            <RootStack.Screen name="CharityStack" component={CharityStack} />
+          </RootStack.Navigator>
+        </NavigationContainer>
+      </View>
+    </SocketProvider>
   );
 }
 

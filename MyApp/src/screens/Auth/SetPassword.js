@@ -46,7 +46,7 @@ export default function SetPasswordScreen({ route, navigation }) {
       name: 'license.jpg',
     });
 
-    // ✅ Debugging: Log formData
+    //  Debugging: Log formData
     console.log('Form Data Preview:');
     for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
@@ -59,7 +59,7 @@ export default function SetPasswordScreen({ route, navigation }) {
         { text: 'Go to Login', onPress: () => navigation.navigate('Login') },
       ]);
     } catch (err) {
-      console.error('Registration Error:', err); // ✅ Will now log full Error
+      console.error('Registration Error:', err); // Will now log full Error
       Alert.alert('Registration Failed', err.message || 'Something went wrong');
     }
   };

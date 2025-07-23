@@ -265,12 +265,6 @@ export const rejectRequest = async (req, res) => {
 
 
 
-
-
-
-
-
-
 //charity Notification
 export const getCharityNotifications = async (req, res) => {
   try {

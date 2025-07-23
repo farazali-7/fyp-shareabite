@@ -5,17 +5,14 @@ import axiosInstance from './axiosInstance';
 // Check if user exists
 export const checkUserExists = async ({ email, contactNumber }) => {
   try {
-    const res = await axiosInstance.post('/users/check-user', {
-      email,
-      contactNumber,
-    });
+    const res = await axiosInstance.post('/users/check-user', { email, contactNumber });
     return res.data.exists;
   } catch (err) {
     throw err.response?.data?.message || err.message || 'Something went wrong.';
   }
 };
 
-//  Register a new user
+// Register a new user
 export const registerUser = async (formData) => {
   try {
     const config = {
@@ -24,29 +21,21 @@ export const registerUser = async (formData) => {
     const res = await axiosInstance.post('/users/register', formData, config);
     return res.data;
   } catch (err) {
-    const errorMessage =
-      err.response?.data?.message || err.message || 'Something went wrong.';
-    throw new Error(errorMessage); 
+    throw new Error(err.response?.data?.message || err.message || 'Something went wrong.');
   }
 };
 
-//  Login user
+// Login user
 export const loginUser = async ({ email, password, role }) => {
   try {
-    const res = await axiosInstance.post('/users/login', {
-      email,
-      password,
-      role,
-    });
-    console.log(" API Success (loginUser):", res.data);
+    const res = await axiosInstance.post('/users/login', { email, password, role });
     return res.data;
   } catch (err) {
-    console.error(" API Login Error:", err);
     throw err.response?.data?.message || err.message || 'Login failed.';
   }
 };
 
-// Get profile & posts
+// Get current user's profile & posts
 export const getUserProfile = async () => {
   const storedUser = await AsyncStorage.getItem('user');
   const parsedUser = JSON.parse(storedUser);
@@ -59,33 +48,27 @@ export const getUserProfile = async () => {
   return res.data;
 };
 
-
-//Get Profile Details 
+// Get another user's profile details by ID
 export const getUserDetailsById = async (userId) => {
   try {
-    const res = await axiosInstance.get("/users/profile/details/" + userId);
-    console.log(res)
+    const res = await axiosInstance.get(`/users/profile/details/${userId}`);
     return res.data;
   } catch (err) {
-    console.log(err)
     throw err.response?.data?.message || 'Failed to fetch user details';
   }
 };
 
-
-
-// Search Profiles 
+// Search user profiles
 export const searchUsers = async (query) => {
   try {
     const res = await axiosInstance.get(`/users/search/${query}`);
-    return res.data; // array of users
+    return res.data;
   } catch (err) {
     throw err.response?.data?.message || 'Failed to search users';
   }
 };
 
-//subscribe and unsubscribe 
-
+// Subscribe or unsubscribe to a user
 export const subscribeToUser = async (targetId, currentUserId) => {
   try {
     const res = await axiosInstance.post(`/users/subscribe/${targetId}`, {
@@ -97,9 +80,7 @@ export const subscribeToUser = async (targetId, currentUserId) => {
   }
 };
 
-
-//Edit Profle 
-// PUT user profile update with image
+// Update user profile with image
 export const updateUserProfile = async (userId, formData) => {
   try {
     const res = await axiosInstance.put(`/users/updateProfile/${userId}`, formData, {
@@ -111,6 +92,7 @@ export const updateUserProfile = async (userId, formData) => {
   }
 };
 
+// Create food post
 export const createFoodPost = async (formData) => {
   try {
     const storedUser = await AsyncStorage.getItem('user');
@@ -126,12 +108,11 @@ export const createFoodPost = async (formData) => {
 
     return res.data;
   } catch (err) {
-    console.log(err)
     throw err.response?.data?.message || 'Failed to create food post';
   }
 };
 
-//request food 
+// Request food post
 export const requestFoodPost = async ({ postId, requesterId, receiverId }) => {
   try {
     const res = await axiosInstance.post('/requests/request', {
@@ -145,26 +126,12 @@ export const requestFoodPost = async ({ postId, requesterId, receiverId }) => {
   }
 };
 
-/*export const getCharityNotifications = async () => {
-  try {
-    const res = await axiosInstance.get('/users/charityNotifications');
-    return res.data;
-  } catch (err) {
-    console.log(err)
-    throw err.response?.data?.message || 'Failed to fetch charity notifications';
-  }
-};*/
-
-//  Fetch all food posts for home screen
+// Fetch all food posts for home screen
 export const fetchAllFoodPosts = async () => {
   try {
     const res = await axiosInstance.get('/users/all');
-
-
-
-    return res.data; 
+    return res.data;
   } catch (err) {
-    console.error(" Failed to fetch food posts:", err);
     throw err.response?.data?.message || 'Failed to fetch food posts.';
   }
 };
