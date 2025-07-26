@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import requestRoutes from './src/routes/requestRoutes.js';
 import chatRoutes from "./src/routes/chatRoutes.js";
+import adminRoutes from './src/routes/adminRoutes.js';
 import Chat from './src/models/chat.js';
 import Message from './src/models/message.js';
 import Notification from './src/models/notification.js';
@@ -17,14 +18,12 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
 });
-
 app.set('io', io);
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,23 +34,16 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use("/api/users", userRoutes);
-app.use("/uploads/posts", express.static(path.join(__dirname, "src/uploads")));
-app.use('/api/requests', requestRoutes);
+app.use("/api/requests", requestRoutes);
 app.use("/api/chats", chatRoutes);
+app.use("/api/admin", adminRoutes);
 
-// --- SOCKET.IO
 io.on("connection", (socket) => {
-  console.log("Socket connected:", socket.id);
-
-  socket.on("join_chat", (chatId) => {
-    socket.join(chatId);
-  });
-
-  socket.on("register_user", (userId) => {
-    socket.userId = userId;
-  });
+  socket.on("join_chat", (chatId) => socket.join(chatId));
+  socket.on("register_user", (userId) => socket.userId = userId);
 
   socket.on("request_food", async ({ senderId, receiverId, postId }) => {
     try {
@@ -96,12 +88,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected:", socket.id);
-  });
+  socket.on("disconnect", () => {});
 });
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3009;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });

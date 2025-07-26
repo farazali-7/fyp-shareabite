@@ -33,11 +33,9 @@ export default function RPost({ navigation }) {
       quality: 1,
     });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
+    if (!result.canceled && result.assets?.length > 0) {
       const selectedUris = result.assets.map((asset) => asset.uri);
       setImages((prev) => [...prev, ...selectedUris]);
-    } else {
-      console.log(' No image selected or canceled');
     }
   };
 
@@ -75,7 +73,6 @@ export default function RPost({ navigation }) {
       Alert.alert('Success', 'Food post created!');
       navigation.goBack();
     } catch (error) {
-      console.error(' Post error:', error);
       Alert.alert('Error', error.message || 'Failed to create food post.');
     }
   };
@@ -138,9 +135,10 @@ export default function RPost({ navigation }) {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
-    marginTop:25,
+    marginTop: 25,
     padding: 16,
     backgroundColor: '#FFFFFF',
     flexGrow: 1,

@@ -8,19 +8,15 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import {createRequest} from '../../apis/requestAPI'
+import { createRequest } from '../../apis/requestAPI';
 import ImageViewing from 'react-native-image-viewing';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import socket from '../../../socket'; // Adjust if needed
+import socket from '../../../socket';
 
 export default function PostCard({ post, currentUserId, currentUserRole }) {
   const [visible, setVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
-
-/*  console.log(" Current userId:", currentUserId);
-console.log(" Current userRole:", currentUserRole);
-console.log(" Post createdBy:", post.createdBy);*/
 
   useEffect(() => {
     (async () => {
@@ -29,7 +25,6 @@ console.log(" Post createdBy:", post.createdBy);*/
         Alert.alert('Permission Denied', 'Location permission is required.');
         return;
       }
-
       let loc = await Location.getCurrentPositionAsync({});
       const coords = {
         latitude: loc.coords.latitude,
@@ -39,11 +34,9 @@ console.log(" Post createdBy:", post.createdBy);*/
     })();
   }, []);
 
-  //  Open in Google Maps
   const openGoogleMaps = () => {
     if (!userLocation || !post.latitude || !post.longitude) {
       Alert.alert('Location Error', 'Location data missing.');
-
       return;
     }
 
@@ -51,7 +44,6 @@ console.log(" Post createdBy:", post.createdBy);*/
     Linking.openURL(url);
   };
 
-  //  Check if post is available
   const isAvailable = () => {
     const today = new Date();
     const bestBefore = new Date(post.bestBefore);
@@ -63,72 +55,42 @@ console.log(" Post createdBy:", post.createdBy);*/
     currentUserId !== post.createdBy &&
     currentUserRole === 'charity';
 
-const handleRequest = async () => {
-  try {
-    if (!post._id || !post.createdBy || !currentUserId) {
-      Alert.alert("Missing Info", "Post or user data is missing.");
-      console.warn(" Missing post._id, post.createdBy, or currentUserId", {
+  const handleRequest = async () => {
+    try {
+      if (!post._id || !post.createdBy || !currentUserId) {
+        Alert.alert('Missing Info', 'Post or user data is missing.');
+        return;
+      }
+
+      const payload = {
         postId: post._id,
-        createdBy: post.createdBy,
-        currentUserId,
-      });
-      return;
+        requesterId: currentUserId,
+        receiverId: post.createdBy,
+      };
+
+      await createRequest(payload);
+      socket.emit('request_food', payload);
+      Alert.alert('Request Sent', 'Your food request has been sent.');
+    } catch (err) {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
     }
-
-    console.log(" Sending API request to backend with:", {
-      postId: post._id,
-      requesterId: currentUserId,
-      receiverId: post.createdBy,
-    });
-
-    const res = await createRequest({
-      postId: post._id,
-      requesterId: currentUserId,
-      receiverId: post.createdBy,
-    });
-
-    console.log(" Request successfully saved in DB:", res);
-
-    socket.emit("request_food", {
-      postId: post._id,
-      requesterId: currentUserId,
-      receiverId: post.createdBy,
-    });
-
-    console.log(" Emitted request_food to socket:", {
-      postId: post._id,
-      requesterId: currentUserId,
-      receiverId: post.createdBy,
-    });
-
-    Alert.alert("Request Sent", "Your food request has been sent.");
-  } catch (err) {
-    console.error(" Failed to create food request:", err.response?.data || err.message);
-    Alert.alert("Error", "Something went wrong. Please try again.");
-  }
-};
-
+  };
 
   return (
     <View style={styles.card}>
-      {/*  Post Image */}
-      <TouchableOpacity onPress={() => setVisible(true)}>
-        <Image
-          source={{ uri: `http://192.168.20.131:3003/${post.images[0]}` }}
-          style={styles.image}
-        />
-      </TouchableOpacity>
+      {post.images?.[0] && (
+        <TouchableOpacity onPress={() => setVisible(true)}>
+          <Image source={{ uri: post.images[0] }} style={styles.image} />
+        </TouchableOpacity>
+      )}
 
       <ImageViewing
-        images={post.images.map(img => ({
-          uri: `http://192.168.20.131:3003/${img}`,
-        }))}
+        images={post.images.map((uri) => ({ uri }))}
         imageIndex={0}
         visible={visible}
         onRequestClose={() => setVisible(false)}
       />
 
-      {/*  Details */}
       <Text style={styles.detail}>User: {post.userName}</Text>
       <Text style={styles.detail}>Food Type: {post.foodType}</Text>
       <Text style={styles.detail}>Quantity: {post.quantity}</Text>
@@ -137,15 +99,13 @@ const handleRequest = async () => {
         Created At: {new Date(post.createdAt).toLocaleString()}
       </Text>
 
-      {/*  Location Button */}
       <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
         <MaterialIcons name="location-on" size={24} color="red" />
         <Text style={styles.trackText}>Track Location</Text>
       </TouchableOpacity>
 
-      {/*  Request /  Picked */}
       {post.status === 'fulfilled' ? (
-        <Text style={styles.pickedText}> Food Picked</Text>
+        <Text style={styles.pickedText}>Food Picked</Text>
       ) : (
         canRequest && (
           <TouchableOpacity style={styles.requestButton} onPress={handleRequest}>

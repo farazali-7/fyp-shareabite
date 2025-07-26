@@ -6,14 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loginUser } from "../../apis/userAPI";
+import { loginUser, getUserStatus } from "../../apis/userAPI";
 
 export default function Login({ navigation }) {
   const [role, setRole] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!role || !email || !password) {
@@ -25,17 +27,30 @@ export default function Login({ navigation }) {
       role === "Eatery"
         ? "restaurant"
         : role === "Charity House"
-          ? "charity"
-          : role;
+        ? "charity"
+        : role;
+
+    setIsLoading(true);
 
     try {
       const data = await loginUser({ email, password, role: mappedRole });
 
-      if (data?.token && data?.user) {
-        await AsyncStorage.setItem("token", data.token);
-        await AsyncStorage.setItem("user", JSON.stringify(data.user));
-        await AsyncStorage.setItem("userId", data.user._id);
+      if (!data?.token || !data?.user) {
+        throw new Error("Invalid response from server");
+      }
 
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+      await AsyncStorage.setItem("userId", data.user._id);
+
+      const statusRes = await getUserStatus(data.user._id);
+      const userStatus = statusRes.status;
+
+      if (userStatus === "pending") {
+        navigation.reset({ index: 0, routes: [{ name: "UserPending" }] });
+      } else if (userStatus === "rejected") {
+        navigation.reset({ index: 0, routes: [{ name: "Rejected" }] });
+      } else if (userStatus === "approved") {
         switch (data.user.role) {
           case "admin":
             navigation.reset({ index: 0, routes: [{ name: "AdminStack" }] });
@@ -50,11 +65,12 @@ export default function Login({ navigation }) {
             Alert.alert("Login Error", "Unknown role returned from server.");
         }
       } else {
-        Alert.alert("Login Failed", "Invalid response from server.");
+        Alert.alert("Error", "Unexpected user status");
       }
     } catch (error) {
-      console.error("Login Error:", error);
       Alert.alert("Login Failed", error?.message || "Something went wrong.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,23 +110,32 @@ export default function Login({ navigation }) {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
         <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#28a745' }]}
-        onPress={() => navigation.navigate('Register')}
+        style={[styles.button, { backgroundColor: "#28a745" }]}
+        onPress={() => navigation.navigate("Register")}
       >
         <Text style={styles.buttonText}>Register New Account</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

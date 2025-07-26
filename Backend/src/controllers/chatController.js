@@ -3,7 +3,6 @@ import Message from '../models/message.js';
 import User from '../models/user.js';
 import mongoose from 'mongoose';
 
-// 1- Search users to start chat
 export const searchUsers = async (req, res) => {
   try {
     const query = req.query.query?.trim();
@@ -34,7 +33,6 @@ export const searchUsers = async (req, res) => {
 
     res.status(200).json(formattedUsers);
   } catch (error) {
-    console.error(' searchUsers Error:', error.message);
     res.status(500).json({
       error: 'Search failed',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -42,7 +40,6 @@ export const searchUsers = async (req, res) => {
   }
 };
 
-// 2- Create chat with a particular user 
 export const createChat = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -82,12 +79,10 @@ export const createChat = async (req, res) => {
 
     res.status(200).json(chat);
   } catch (error) {
-    console.error(' Error creating chat:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// 3- Get user chats to display all the created chats
 export const getUserChats = async (req, res) => {
   try {
     const currentUserId = req.user._id;
@@ -128,14 +123,9 @@ export const getUserChats = async (req, res) => {
 
     res.status(200).json(formattedChats);
   } catch (error) {
-    console.error(' Error fetching user chats:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-
-
-// controllers/messageController.js
 
 export const sendMessage = async (req, res) => {
   try {
@@ -143,27 +133,22 @@ export const sendMessage = async (req, res) => {
     const senderId = req.user?._id;
 
     if (!content || !chatId) {
-      console.warn('Missing content or chatId');
       return res.status(400).json({ message: 'Content and Chat ID are required' });
     }
 
-    // Create and save new message
     const newMessage = await Message.create({
       chat: chatId,
       sender: senderId,
       content,
     });
 
-    // Update chat with lastMessage (using message ID)
     await Chat.findByIdAndUpdate(chatId, { lastMessage: newMessage._id });
 
-    // Populate sender and chat participants
     const populatedMessage = await newMessage.populate([
       { path: 'sender', select: 'userName profileImage' },
       { path: 'chat', populate: { path: 'participants', select: 'userName profileImage' } }
     ]);
 
-    // Emit message to chat room
     const io = req.app.get('io');
     if (io) {
       io.to(chatId).emit('receiveMessage', populatedMessage);
@@ -171,7 +156,6 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json(populatedMessage);
   } catch (err) {
-    console.error('Send Message Error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -186,14 +170,9 @@ export const getMessages = async (req, res) => {
 
     res.status(200).json(messages);
   } catch (err) {
-    console.error('Get Messages Error:', err);
     res.status(500).json({ message: 'Could not fetch messages' });
   }
 };
-
-
-
-
 
 export const markAsRead = async (req, res) => {
   try {
@@ -201,42 +180,30 @@ export const markAsRead = async (req, res) => {
     const userId = req.user._id;
     const io = req.app.get('io');
 
-    console.log(`👀 [MARK AS READ] User ${userId} marking chat ${chatId} as read`);
-
-    // Mark messages as read
-    const updateResult = await Message.updateMany(
-      { 
-        chat: chatId, 
+    await Message.updateMany(
+      {
+        chat: chatId,
         sender: { $ne: userId },
-        readBy: { $nin: [userId] } 
+        readBy: { $nin: [userId] }
       },
       { $addToSet: { readBy: userId } }
     );
-    console.log(`📝 Marked ${updateResult.modifiedCount} messages as read`);
 
-    // Reset unread count
     await Chat.updateOne(
       { _id: chatId, 'participants.user': userId },
       { $set: { 'participants.$.unreadCount': 0 } }
     );
-    console.log(`🔢 Reset unread count for user ${userId} in chat ${chatId}`);
 
-    // Notify other participants
-    io.to(chatId).emit('messageRead', { 
-      chatId, 
-      userId,
-      timestamp: new Date() 
-    });
-    console.log(`📢 Emitted read receipt for chat ${chatId}`);
+    if (io) {
+      io.to(chatId).emit('messageRead', {
+        chatId,
+        userId,
+        timestamp: new Date()
+      });
+    }
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error('❌ [MARK AS READ ERROR]', {
-      error: error.message,
-      stack: error.stack,
-      chatId: req.params.chatId,
-      userId: req.user._id
-    });
     res.status(500).json({ message: 'Error marking messages as read' });
   }
 };

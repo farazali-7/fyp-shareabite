@@ -13,7 +13,8 @@ import {
   userProfileDetails,
   createPost,
   requestFood,
-  getAllPosts
+  getAllPosts,
+  getUserStatusById
 } from "../controllers/userController.js";
 
 import upload from "../middlewares/uploadMiddleware.js";
@@ -77,6 +78,6 @@ router.post('/request', requestFood);
 router.get('/all', getAllPosts);
 
 
-
+router.get('/:userId/status', getUserStatusById);
 
 export default router;

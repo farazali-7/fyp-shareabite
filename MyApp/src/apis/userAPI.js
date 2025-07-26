@@ -1,8 +1,15 @@
-// src/apis/userAPI.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from './axiosInstance';
 
-// Check if user exists
+export const getUserStatus = async (userId) => {
+  try {
+    const res = await axiosInstance.get(`/users/${userId}/status`);
+    return res.data;
+  } catch (err) {
+    throw new Error(err.response?.data?.message || 'Failed to fetch user status');
+  }
+};
+
 export const checkUserExists = async ({ email, contactNumber }) => {
   try {
     const res = await axiosInstance.post('/users/check-user', { email, contactNumber });
@@ -12,7 +19,6 @@ export const checkUserExists = async ({ email, contactNumber }) => {
   }
 };
 
-// Register a new user
 export const registerUser = async (formData) => {
   try {
     const config = {
@@ -25,7 +31,6 @@ export const registerUser = async (formData) => {
   }
 };
 
-// Login user
 export const loginUser = async ({ email, password, role }) => {
   try {
     const res = await axiosInstance.post('/users/login', { email, password, role });
@@ -35,7 +40,6 @@ export const loginUser = async ({ email, password, role }) => {
   }
 };
 
-// Get current user's profile & posts
 export const getUserProfile = async () => {
   const storedUser = await AsyncStorage.getItem('user');
   const parsedUser = JSON.parse(storedUser);
@@ -48,7 +52,6 @@ export const getUserProfile = async () => {
   return res.data;
 };
 
-// Get another user's profile details by ID
 export const getUserDetailsById = async (userId) => {
   try {
     const res = await axiosInstance.get(`/users/profile/details/${userId}`);
@@ -58,7 +61,6 @@ export const getUserDetailsById = async (userId) => {
   }
 };
 
-// Search user profiles
 export const searchUsers = async (query) => {
   try {
     const res = await axiosInstance.get(`/users/search/${query}`);
@@ -68,7 +70,6 @@ export const searchUsers = async (query) => {
   }
 };
 
-// Subscribe or unsubscribe to a user
 export const subscribeToUser = async (targetId, currentUserId) => {
   try {
     const res = await axiosInstance.post(`/users/subscribe/${targetId}`, {
@@ -80,7 +81,6 @@ export const subscribeToUser = async (targetId, currentUserId) => {
   }
 };
 
-// Update user profile with image
 export const updateUserProfile = async (userId, formData) => {
   try {
     const res = await axiosInstance.put(`/users/updateProfile/${userId}`, formData, {
@@ -92,7 +92,6 @@ export const updateUserProfile = async (userId, formData) => {
   }
 };
 
-// Create food post
 export const createFoodPost = async (formData) => {
   try {
     const storedUser = await AsyncStorage.getItem('user');
@@ -112,7 +111,6 @@ export const createFoodPost = async (formData) => {
   }
 };
 
-// Request food post
 export const requestFoodPost = async ({ postId, requesterId, receiverId }) => {
   try {
     const res = await axiosInstance.post('/requests/request', {
@@ -126,7 +124,6 @@ export const requestFoodPost = async ({ postId, requesterId, receiverId }) => {
   }
 };
 
-// Fetch all food posts for home screen
 export const fetchAllFoodPosts = async () => {
   try {
     const res = await axiosInstance.get('/users/all');
