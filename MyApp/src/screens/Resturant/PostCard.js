@@ -39,7 +39,6 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
       Alert.alert('Location Error', 'Location data missing.');
       return;
     }
-
     const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${post.latitude},${post.longitude}&travelmode=driving`;
     Linking.openURL(url);
   };
@@ -72,24 +71,28 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
       socket.emit('request_food', payload);
       Alert.alert('Request Sent', 'Your food request has been sent.');
     } catch (err) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert('Error', 'You already requested this post.');
     }
   };
 
+  const hasImages = Array.isArray(post.images) && post.images.length > 0;
+
   return (
     <View style={styles.card}>
-      {post.images?.[0] && (
+      {hasImages && (
         <TouchableOpacity onPress={() => setVisible(true)}>
           <Image source={{ uri: post.images[0] }} style={styles.image} />
         </TouchableOpacity>
       )}
 
-      <ImageViewing
-        images={post.images.map((uri) => ({ uri }))}
-        imageIndex={0}
-        visible={visible}
-        onRequestClose={() => setVisible(false)}
-      />
+      {hasImages && (
+        <ImageViewing
+          images={post.images.map((uri) => ({ uri }))}
+          imageIndex={0}
+          visible={visible}
+          onRequestClose={() => setVisible(false)}
+        />
+      )}
 
       <Text style={styles.detail}>User: {post.userName}</Text>
       <Text style={styles.detail}>Food Type: {post.foodType}</Text>

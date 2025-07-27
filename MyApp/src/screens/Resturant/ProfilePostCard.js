@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
-import { Entypo } from '@expo/vector-icons'; // for 3-dots icon
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, Modal, Pressable, ScrollView } from 'react-native';
+import { Entypo } from '@expo/vector-icons';
 
 const ProfilePostCard = ({ post, currentUserId }) => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -8,27 +8,23 @@ const ProfilePostCard = ({ post, currentUserId }) => {
   const handleEdit = () => {
     setMenuVisible(false);
     Alert.alert("Edit", `Edit post: ${post._id}`);
-    // navigation.navigate('EditPost', { postId: post._id }) -- if you have it
   };
 
   const handleDelete = () => {
     setMenuVisible(false);
     Alert.alert("Delete", `Delete post: ${post._id}`);
-    // Make API call here to delete post
   };
 
   const isOwnPost = post.userId === currentUserId;
 
   return (
     <View style={styles.card}>
-      {/* Images */}
       <ScrollView horizontal>
         {post.images.map((img, idx) => (
           <Image key={idx} source={{ uri: img }} style={styles.image} />
         ))}
       </ScrollView>
 
-      {/* Header + Dots */}
       <View style={styles.header}>
         <Text style={styles.title}>{post.foodType} - {post.quantity}</Text>
         {isOwnPost && (
@@ -40,7 +36,6 @@ const ProfilePostCard = ({ post, currentUserId }) => {
 
       <Text style={styles.description}>{post.description}</Text>
 
-      {/* Modal Menu */}
       <Modal
         visible={menuVisible}
         transparent
@@ -50,10 +45,10 @@ const ProfilePostCard = ({ post, currentUserId }) => {
         <Pressable style={styles.modalOverlay} onPress={() => setMenuVisible(false)}>
           <View style={styles.menu}>
             <TouchableOpacity onPress={handleEdit}>
-              <Text style={styles.menuItem}>✏️ Edit</Text>
+              <Text style={styles.menuItem}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDelete}>
-              <Text style={styles.menuItem}>🗑️ Delete</Text>
+              <Text style={styles.menuItem}>Delete</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -86,8 +81,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  title: { fontSize: 16, fontWeight: 'bold', color: '#000099' },
-  description: { fontSize: 14, color: '#555' },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000099',
+  },
+  description: {
+    fontSize: 14,
+    color: '#555',
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',

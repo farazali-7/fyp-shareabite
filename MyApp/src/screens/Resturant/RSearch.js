@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { searchUsers } from '../../apis/userAPI';
@@ -18,7 +25,7 @@ const RSearchScreen = () => {
       } else {
         setResults([]);
       }
-    }, 300); // Debounce for better performance
+    }, 300);
 
     return () => clearTimeout(delaySearch);
   }, [query]);
@@ -29,7 +36,7 @@ const RSearchScreen = () => {
       const users = await searchUsers(query);
       setResults(users);
     } catch (err) {
-      console.error(' Search failed:', err);
+      console.error('Search failed:', err);
     } finally {
       setLoading(false);
     }
@@ -46,8 +53,6 @@ const RSearchScreen = () => {
       />
       <View>
         <Text style={styles.userName}>{item.userName}</Text>
-        {/* Optional: Show role */}
-        {/* <Text style={styles.roleText}>{item.role === 'restaurant' ? 'Eatery' : 'Charity'}</Text> */}
       </View>
     </TouchableOpacity>
   );
@@ -81,7 +86,7 @@ export default RSearchScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:25,
+    marginTop: 25,
     flex: 1,
     backgroundColor: '#fff',
     padding: 12,
@@ -115,10 +120,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     fontWeight: '600',
-  },
-  roleText: {
-    fontSize: 12,
-    color: '#888',
   },
   emptyText: {
     textAlign: 'center',

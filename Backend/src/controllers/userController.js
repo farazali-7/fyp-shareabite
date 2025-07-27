@@ -172,13 +172,19 @@ export const searchUsersProfile = async (req, res) => {
 // View another profile & posts
 export const getProfileAndPosts = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password').populate('subscribers', '_id');
-    const posts = await FoodPost.find({ user: req.params.id });
+    const user = await User.findById(req.params.id)
+      .select('-password')
+      .populate('subscribers', '_id');
+
+    const posts = await FoodPost.find({ createdBy: req.params.id });
+
     res.json({ user, posts });
   } catch (err) {
+    console.error('Error fetching profile and posts:', err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Subscribe/Unsubscribe
 export const toggleSubscribe = async (req, res) => {
@@ -324,5 +330,55 @@ export const getAllPosts = async (req, res) => {
     res.status(200).json({ posts: formatted });
   } catch (error) {
     res.status(500).json({ error: "Failed to load posts" });
+  }
+};
+
+// DELETE /api/posts/:postId
+export const deletePostById = async (req, res) => {
+  const { postId } = req.params;
+  const requesterId = req.user._id;
+
+  try {
+    const post = await FoodPost.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (post.createdBy.toString() !== requesterId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this post' });
+    }
+
+    await FoodPost.deleteOne({ _id: postId });
+    res.status(200).json({ message: 'Post deleted successfully' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error deleting post' });
+  }
+};
+
+// PUT /api/posts/:postId
+export const updatePostById = async (req, res) => {
+  try {
+    const { foodType, quantity, bestBefore, description } = req.body;
+    const post = await FoodPost.findById(req.params.postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (post.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to edit this post' });
+    }
+
+    post.foodType = foodType || post.foodType;
+    post.quantity = quantity || post.quantity;
+    post.bestBefore = bestBefore || post.bestBefore;
+    post.description = description || post.description;
+
+    const updatedPost = await post.save();
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error updating post' });
   }
 };

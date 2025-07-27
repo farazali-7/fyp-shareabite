@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createFoodPost } from '../../apis/userAPI';
 
@@ -46,6 +47,15 @@ export default function RPost({ navigation }) {
     }
 
     try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to post.');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
       const storedUser = await AsyncStorage.getItem('user');
       const parsedUser = JSON.parse(storedUser);
 
@@ -55,8 +65,8 @@ export default function RPost({ navigation }) {
       formData.append('bestBefore', bestBefore);
       formData.append('description', description);
       formData.append('createdBy', parsedUser._id);
-      formData.append('latitude', '31.5204');
-      formData.append('longitude', '74.3587');
+      formData.append('latitude', latitude);
+      formData.append('longitude', longitude);
 
       images.forEach((uri) => {
         const fileName = uri.split('/').pop();

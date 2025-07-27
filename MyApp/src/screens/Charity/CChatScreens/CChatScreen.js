@@ -79,14 +79,28 @@ const CChatScreen = ({ route, navigation }) => {
     socket.emit('joinChat', chatId);
 
     const handleReceiveMessage = (message) => {
-      setMessages(prev => (prev.some(m => m._id === message._id) ? prev : [...prev, message]));
+      setMessages(prev => {
+        const tempIndex = prev.findIndex(
+          m =>
+            m.status === 'sending' &&
+            m.content === message.content &&
+            m.sender._id === message.sender._id
+        );
+        if (tempIndex !== -1) {
+          const updated = [...prev];
+          updated[tempIndex] = message;
+          return updated;
+        }
+
+        const exists = prev.some(m => m._id === message._id);
+        return exists ? prev : [...prev, message];
+      });
     };
 
     const handleTypingEvent = (data) => {
       if (data.chatId === chatId && data.senderId !== currentUserId) {
         setIsTyping(true);
-        const timer = setTimeout(() => setIsTyping(false), 2000);
-        return () => clearTimeout(timer);
+        setTimeout(() => setIsTyping(false), 2000);
       }
     };
 
@@ -130,17 +144,20 @@ const CChatScreen = ({ route, navigation }) => {
     try {
       setSending(true);
       setMessages(prev => [...prev, tempMessage]);
-      setNewMessage('');
+      const payload = {
+        chatId,
+        content: newMessage,
+        senderId: currentUserId,
+      };
 
       if (isConnected && socket) {
-        socket.emit('sendMessage', {
-          chatId,
-          content: newMessage,
-          senderId: currentUserId,
-        });
+        socket.emit('sendMessage', payload);
       } else {
         await sendMessage(chatId, newMessage);
+        fetchMessages(); // fallback in offline
       }
+
+      setNewMessage('');
     } catch {
       setMessages(prev =>
         prev.map(msg => (msg._id === tempId ? { ...msg, status: 'failed' } : msg))
@@ -149,7 +166,7 @@ const CChatScreen = ({ route, navigation }) => {
     } finally {
       setSending(false);
     }
-  }, [newMessage, chatId, socket, isConnected, currentUserId]);
+  }, [newMessage, chatId, socket, isConnected, currentUserId, fetchMessages]);
 
   const handleTyping = useCallback(() => {
     if (newMessage.trim() && socket) {
@@ -191,7 +208,7 @@ const CChatScreen = ({ route, navigation }) => {
                     : 'checkmark-done-outline'
                 }
                 size={16}
-                color={item.status === 'failed' ? '#ff3b30' : '#007AFF'}
+                color={item.status === 'failed' ? '#ff3b30' : '#fff'}
                 style={styles.statusIcon}
               />
             )}
@@ -234,8 +251,10 @@ const CChatScreen = ({ route, navigation }) => {
         <TextInput
           style={styles.input}
           value={newMessage}
-          onChangeText={setNewMessage}
-          onChange={handleTyping}
+          onChangeText={text => {
+            setNewMessage(text);
+            handleTyping();
+          }}
           placeholder="Type a message..."
           placeholderTextColor="#999"
           multiline

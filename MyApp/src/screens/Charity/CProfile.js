@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getUserProfile } from '../../apis/userAPI'; 
+import { getUserProfile } from '../../apis/userAPI';
 
 const CProfileScreen = () => {
   const navigation = useNavigation();
@@ -22,14 +22,12 @@ const CProfileScreen = () => {
   const fetchProfile = async () => {
     try {
       const data = await getUserProfile();
-
       if (data && data.user) {
         setProfile(data.user);
       } else {
         setProfile(null);
       }
     } catch (err) {
-      console.error("Error fetching profile:", err);
       Alert.alert('Error', err.toString());
       setProfile(null);
     } finally {
@@ -54,13 +52,13 @@ const CProfileScreen = () => {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="blue" style={{ marginTop: 50 }} />;
+    return <ActivityIndicator size="large" color="#000099" style={{ marginTop: 50 }} />;
   }
 
   if (!profile) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: 'gray' }}>No profile data found.</Text>
+        <Text style={styles.emptyText}>No profile data found.</Text>
       </View>
     );
   }
@@ -76,32 +74,87 @@ const CProfileScreen = () => {
           style={styles.profileImage}
         />
         <Text style={styles.userName}>{profile?.userName || 'User Name'}</Text>
-
         <Text style={styles.roleText}>
           Role: {profile?.role === 'restaurant' ? 'Eatery' : profile?.role === 'charity' ? 'Charity House' : 'Unknown'}
         </Text>
-
         <Text>{profile?.subscribers?.length || 0} Subscribers</Text>
-
         <TouchableOpacity onPress={handleViewDetails}>
           <Text style={styles.linkText}>View Full Details</Text>
         </TouchableOpacity>
       </View>
+
+      <View style={styles.divider} />
+
+      {profile.role === 'charity' && (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            Only eateries can create food posts. As a charity, you can request food but cannot post it.
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  topSection: { alignItems: 'center', padding: 20 },
-  profileImage: { width: 100, height: 100, borderRadius: 50 },
-  userName: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
-  roleText: { fontSize: 14, color: 'gray', marginTop: 4 },
-  linkText: { color: 'blue', marginTop: 10 },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  topSection: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    backgroundColor: '#F5F9FF',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: '#00CCCC',
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 12,
+    color: '#000099',
+  },
+  roleText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
+  linkText: {
+    color: '#00CCCC',
+    marginTop: 10,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#00CCCC',
+    marginHorizontal: 20,
+    marginVertical: 16,
+  },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyText: {
+    color: 'gray',
+    fontSize: 14,
+  },
+  infoBox: {
+    marginHorizontal: 20,
+    backgroundColor: '#fff3cd',
+    borderColor: '#ffeeba',
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 8,
+  },
+  infoText: {
+    color: '#856404',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });
 

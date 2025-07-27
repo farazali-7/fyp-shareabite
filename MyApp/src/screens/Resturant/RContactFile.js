@@ -10,6 +10,14 @@ import {
 import { FontAwesome, MaterialIcons, Entypo } from '@expo/vector-icons';
 
 export default function RContactUsScreen() {
+  const adminInfo = {
+    name: 'Admin',
+    email: 'admin@shareabite.com',
+    phone: '+92 000 0000000',
+    address: '123-A Food Street, Gulberg III, Lahore, Pakistan',
+    website: 'https://www.shareabite.org',
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Contact Us</Text>
@@ -21,8 +29,8 @@ export default function RContactUsScreen() {
         <FontAwesome name="envelope" size={24} color="#00CCCC" />
         <View style={styles.info}>
           <Text style={styles.label}>Email</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('mailto:support@shareabite.org')}>
-            <Text style={styles.text}>support@shareabite.org</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(`mailto:${adminInfo.email}`)}>
+            <Text style={styles.text}>{adminInfo.email}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -31,8 +39,8 @@ export default function RContactUsScreen() {
         <MaterialIcons name="phone" size={24} color="#00CCCC" />
         <View style={styles.info}>
           <Text style={styles.label}>Phone</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('tel:+923000000000')}>
-            <Text style={styles.text}>+92 300 0000000</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(`tel:${adminInfo.phone}`)}>
+            <Text style={styles.text}>{adminInfo.phone}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -41,7 +49,7 @@ export default function RContactUsScreen() {
         <Entypo name="location-pin" size={24} color="#00CCCC" />
         <View style={styles.info}>
           <Text style={styles.label}>Office Address</Text>
-          <Text style={styles.text}>123-A Food Street, Gulberg III, Lahore, Pakistan</Text>
+          <Text style={styles.text}>{adminInfo.address}</Text>
         </View>
       </View>
 
@@ -49,20 +57,20 @@ export default function RContactUsScreen() {
         <FontAwesome name="globe" size={24} color="#00CCCC" />
         <View style={styles.info}>
           <Text style={styles.label}>Website</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('https://www.shareabite.org')}>
-            <Text style={styles.text}>www.shareabite.org</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(adminInfo.website)}>
+            <Text style={styles.text}>{adminInfo.website.replace('https://', '')}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <Text style={styles.footer}>Thank you for supporting our mission ❤️</Text>
+      <Text style={styles.footer}>Thank you for supporting our mission</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:20,
+    marginTop: 20,
     padding: 20,
     backgroundColor: '#FFFFFF',
     flexGrow: 1,

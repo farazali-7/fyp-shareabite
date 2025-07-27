@@ -14,7 +14,10 @@ import {
   createPost,
   requestFood,
   getAllPosts,
-  getUserStatusById
+  getUserStatusById,
+  updatePostById,
+  deletePostById
+
 } from "../controllers/userController.js";
 
 import upload from "../middlewares/uploadMiddleware.js";
@@ -22,6 +25,9 @@ import protect from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 
+
+router.delete('/:postId', protect, deletePostById);
+router.put('/:postId', protect, updatePostById);
 //Edit Profile
 router.put(
   "/updateProfile/:id",

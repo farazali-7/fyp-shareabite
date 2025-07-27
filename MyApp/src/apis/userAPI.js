@@ -52,14 +52,17 @@ export const getUserProfile = async () => {
   return res.data;
 };
 
-export const getUserDetailsById = async (userId) => {
+export const getProfileAndPostsById = async (userId) => {
   try {
-    const res = await axiosInstance.get(`/users/profile/details/${userId}`);
+    const res = await axiosInstance.get(`/users/profile/${userId}`);
     return res.data;
   } catch (err) {
-    throw err.response?.data?.message || 'Failed to fetch user details';
+    throw err.response?.data?.message || 'Failed to fetch profile and posts';
   }
 };
+
+
+
 
 export const searchUsers = async (query) => {
   try {
@@ -92,11 +95,15 @@ export const updateUserProfile = async (userId, formData) => {
   }
 };
 
+
+
+
+
+
 export const createFoodPost = async (formData) => {
   try {
     const storedUser = await AsyncStorage.getItem('user');
-    const parsedUser = JSON.parse(storedUser);
-    const token = parsedUser?.token;
+    const token = JSON.parse(storedUser)?.token;
 
     const res = await axiosInstance.post('/users/create', formData, {
       headers: {
@@ -118,6 +125,7 @@ export const requestFoodPost = async ({ postId, requesterId, receiverId }) => {
       requesterId,
       receiverId,
     });
+
     return res.data;
   } catch (err) {
     throw err.response?.data?.message || 'Failed to send request.';
@@ -132,3 +140,35 @@ export const fetchAllFoodPosts = async () => {
     throw err.response?.data?.message || 'Failed to fetch food posts.';
   }
 };
+
+export const deletePost = async (postId) => {
+  try {
+    const storedUser = await AsyncStorage.getItem('user');
+    const token = JSON.parse(storedUser)?.token;
+
+    const res = await axiosInstance.delete(`/users/${postId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return res.data;
+  } catch (err) {
+    throw err.response?.data?.message || 'Failed to delete post';
+  }
+};
+
+export const editPost = async (postId, updatedFields) => {
+  try {
+    const storedUser = await AsyncStorage.getItem('user');
+    const token = JSON.parse(storedUser)?.token;
+
+    const res = await axiosInstance.put(`/users/${postId}`, updatedFields, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return res.data;
+  } catch (err) {
+    throw err.response?.data?.message || 'Failed to update post';
+  }
+};
+
+

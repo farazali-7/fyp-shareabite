@@ -117,39 +117,28 @@ const RChatScreen = ({ route, navigation }) => {
   const handleSend = useCallback(async () => {
     if (!newMessage.trim() || !currentUserId) return;
 
-    const tempId = Date.now().toString();
-    const tempMessage = {
-      _id: tempId,
-      chat: chatId,
-      content: newMessage,
-      sender: { _id: currentUserId },
-      createdAt: new Date().toISOString(),
-      status: 'sending',
-    };
+    setNewMessage('');
+    setSending(true);
 
     try {
-      setSending(true);
-      setMessages(prev => [...prev, tempMessage]);
-      setNewMessage('');
+      const payload = {
+        chatId,
+        content: newMessage,
+        senderId: currentUserId,
+      };
 
       if (isConnected && socket) {
-        socket.emit('sendMessage', {
-          chatId,
-          content: newMessage,
-          senderId: currentUserId,
-        });
+        socket.emit('sendMessage', payload);
       } else {
         await sendMessage(chatId, newMessage);
+        fetchMessages(); // fallback fetch
       }
     } catch {
-      setMessages(prev =>
-        prev.map(msg => (msg._id === tempId ? { ...msg, status: 'failed' } : msg))
-      );
       Alert.alert('Error', 'Failed to send message');
     } finally {
       setSending(false);
     }
-  }, [newMessage, chatId, socket, isConnected, currentUserId]);
+  }, [newMessage, chatId, socket, isConnected, currentUserId, fetchMessages]);
 
   const handleTyping = useCallback(() => {
     if (newMessage.trim() && socket) {
@@ -183,15 +172,9 @@ const RChatScreen = ({ route, navigation }) => {
             </Text>
             {isMe && (
               <Ionicons
-                name={
-                  item.status === 'sending'
-                    ? 'time-outline'
-                    : item.status === 'failed'
-                    ? 'warning-outline'
-                    : 'checkmark-done-outline'
-                }
+                name="checkmark-done-outline"
                 size={16}
-                color={item.status === 'failed' ? '#ff3b30' : '#007AFF'}
+                color="#fff"
                 style={styles.statusIcon}
               />
             )}
@@ -234,8 +217,10 @@ const RChatScreen = ({ route, navigation }) => {
         <TextInput
           style={styles.input}
           value={newMessage}
-          onChangeText={setNewMessage}
-          onChange={handleTyping}
+          onChangeText={text => {
+            setNewMessage(text);
+            handleTyping();
+          }}
           placeholder="Type a message..."
           placeholderTextColor="#999"
           multiline
