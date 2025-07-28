@@ -20,14 +20,13 @@ const CHomeScreen = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
 
-  // Set up header with chat icon
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <Appbar.Action 
           icon="chat" 
           onPress={() => navigation.navigate('CharityChatList')}
-          color="#000099"
+          color="white"
           size={24}
           style={styles.chatIcon}
         />
@@ -35,7 +34,6 @@ const CHomeScreen = () => {
     });
   }, [navigation]);
 
-  // Load current user ID and role
   const loadUserData = async () => {
     try {
       const userString = await AsyncStorage.getItem('user');
@@ -53,7 +51,6 @@ const CHomeScreen = () => {
     }
   };
 
-  // Fetch all food posts
   const loadPosts = async () => {
     try {
       const data = await fetchAllFoodPosts();
@@ -69,7 +66,6 @@ const CHomeScreen = () => {
     }
   };
 
-  // Refresh data on screen focus
   useFocusEffect(
     React.useCallback(() => {
       const fetchData = async () => {
@@ -80,20 +76,15 @@ const CHomeScreen = () => {
     }, [])
   );
 
-  const handleNewPost = () => {
-    navigation.navigate('NewPost');
-  };
 
-  // Loading state
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#000099" />
+        <ActivityIndicator size="large" color="#356F59" />
       </View>
     );
   }
 
-  // Render food post list
   return (
     <View style={styles.container}>
       <FlatList
@@ -114,54 +105,52 @@ const CHomeScreen = () => {
         contentContainerStyle={styles.listContent}
       />
 
-      <FAB 
-        style={styles.fab} 
-        icon="plus" 
-        onPress={handleNewPost} 
-        color="white"
-      />
+   
     </View>
   );
 };
 
 export default CHomeScreen;
 
+
+
 const styles = StyleSheet.create({
   container: {
-    marginTop:10,
-    flex: 1,
-    backgroundColor: '#f5f5f5',
+    flex: 1,                        
+    marginTop: 0,                
+    backgroundColor: '#e6e6e6',     
   },
+
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    flex: 1,                      
+    justifyContent: 'center',      
+    alignItems: 'center',     },     
   listContent: {
-    paddingHorizontal: 10,
-    paddingBottom: 80,
+    paddingHorizontal: 0,       
+    paddingBottom: 0,           
   },
+
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 50,                
   },
+
   emptyText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 16,                 
+    color: 'white',
+    backgroundColor:'#356F59',                 
+    fontStyle: 'italic',         
   },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 16,
-    bottom: 16,
-    backgroundColor: '#000099',
-    borderRadius: 28,
-    elevation: 4,
-  },
+
+
+
   chatIcon: {
-    marginRight: 30,
-    backgroundColor:'#13bddbff',
+    marginRight: 16,               
+    backgroundColor: '#356F59',    
+    padding: 8,                 
+    borderRadius: 20,              
   },
 });
+

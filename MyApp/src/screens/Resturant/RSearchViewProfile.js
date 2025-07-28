@@ -17,8 +17,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialIcons } from '@expo/vector-icons';
 import PostCard from './PostCard';
 
-const { width } = Dimensions.get('window');
-
 const RSearchViewProfileScreen = () => {
   const route = useRoute();
   const { userId } = route.params;
@@ -67,8 +65,8 @@ const RSearchViewProfileScreen = () => {
 
   if (loading || !profile) {
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#4A90E2" />
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#356F59" />
       </View>
     );
   }
@@ -77,35 +75,27 @@ const RSearchViewProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.profileHeader}>
+      <View style={styles.backgroundWrapper}>
+        <View style={styles.topBackground} />
+        <View style={styles.bottomBackground} />
+      </View>
+
+      <View style={styles.topSection}>
         <Image
           source={{ uri: profile.profileImage || 'https://i.pravatar.cc/150' }}
           style={styles.profileImage}
         />
         <Text style={styles.userName}>{profile.userName}</Text>
+        <Text style={styles.roleText}>{displayRole}</Text>
 
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleText}>{displayRole}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.infoRow}
-          onPress={() => setShowEmail(!showEmail)}
-        >
-          <MaterialIcons name="email" size={20} color="#4A90E2" />
-          <Text style={styles.infoText}>
-            {showEmail ? profile.email : 'Tap to view email'}
-          </Text>
+        <TouchableOpacity style={styles.infoRow} onPress={() => setShowEmail(!showEmail)}>
+          <MaterialIcons name="email" size={20} color="#356F59" />
+          <Text style={styles.linkText}>{showEmail ? profile.email : 'Tap to view email'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.infoRow}
-          onPress={() => setShowContact(!showContact)}
-        >
-          <MaterialIcons name="phone" size={20} color="#4A90E2" />
-          <Text style={styles.infoText}>
-            {showContact ? profile.contactNumber : 'Tap to view contact'}
-          </Text>
+        <TouchableOpacity style={styles.infoRow} onPress={() => setShowContact(!showContact)}>
+          <MaterialIcons name="phone" size={20} color="#356F59" />
+          <Text style={styles.linkText}>{showContact ? profile.contactNumber : 'Tap to view contact'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -113,7 +103,7 @@ const RSearchViewProfileScreen = () => {
 
       {profile.role === 'restaurant' ? (
         posts.length > 0 ? (
-          <View style={styles.postsContainer}>
+          <View style={{ paddingHorizontal: 16 }}>
             <Text style={styles.sectionTitle}>Available Food Posts</Text>
             <FlatList
               data={posts.filter(post => post.status === 'available')}
@@ -128,18 +118,16 @@ const RSearchViewProfileScreen = () => {
                 />
               )}
               scrollEnabled={false}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={{ paddingBottom: 20 }}
             />
           </View>
         ) : (
-          <View style={styles.infoContainer}>
-            <MaterialIcons name="info-outline" size={24} color="#4A90E2" />
+          <View style={styles.infoBox}>
             <Text style={styles.infoText}>No food posts available</Text>
           </View>
         )
       ) : (
-        <View style={styles.infoContainer}>
-          <MaterialIcons name="info-outline" size={24} color="#4A90E2" />
+        <View style={styles.infoBox}>
           <Text style={styles.infoText}>Only eateries can create food posts</Text>
         </View>
       )}
@@ -152,98 +140,99 @@ export default RSearchViewProfileScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'white',
   },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  backgroundWrapper: {
+    position: 'relative',
+    backgroundColor: '#356F59',
   },
-  profileHeader: {
+  topBackground: {
+    backgroundColor: 'white',
+    height: 200,
+    borderBottomLeftRadius: 200,
+    borderBottomRightRadius: 200,
+  },
+  bottomBackground: {
+    position: 'absolute',
+    top: 175,
+    left: 0,
+    right: 0,
+    height: 180,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+  },
+  topSection: {
     alignItems: 'center',
-    padding: 25,
-    backgroundColor: '#F0F8FF',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+    marginTop: -140,
   },
   profileImage: {
-    marginTop: 30,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 2,
-    borderColor: '#4A90E2',
-    marginBottom: 10,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: 'white',
+    backgroundColor: '#fff',
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#2c3e50',
-    marginBottom: 4,
-  },
-  roleBadge: {
-    backgroundColor: '#4A90E2',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
-    marginBottom: 8,
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 8,
+    color: 'black',
   },
   roleText: {
-    color: '#fff',
-    fontWeight: '600',
     fontSize: 14,
+    color: 'black',
+    marginTop: 4,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
-    padding: 8,
-    backgroundColor: '#fff',
+    padding: 6,
+    backgroundColor: '#F0F8FF',
     borderRadius: 8,
-    elevation: 1,
     width: '80%',
     justifyContent: 'center',
   },
-  infoText: {
-    fontSize: 16,
-    color: '#4A90E2',
+  linkText: {
+    color: '#356F59',
     marginLeft: 6,
+    fontSize: 14,
     textDecorationLine: 'underline',
   },
   divider: {
-    height: 1,
-    backgroundColor: '#4A90E2',
-    marginVertical: 16,
+    height: 4,
+    backgroundColor: 'green',
     marginHorizontal: 20,
-    opacity: 0.3,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginLeft: 16,
     marginBottom: 10,
   },
-  postsContainer: {
-    paddingHorizontal: 16,
-  },
-  infoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    marginTop: 20,
-    backgroundColor: '#F0F8FF',
-    borderRadius: 10,
+  infoBox: {
+    marginVertical: 20,
     marginHorizontal: 20,
+    backgroundColor: '#356F59',
+    borderColor: '#356F59',
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 8,
   },
-  listContent: {
-    paddingBottom: 20,
+  infoText: {
+    color: 'white',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

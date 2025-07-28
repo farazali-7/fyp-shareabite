@@ -96,7 +96,6 @@ const REditProfileScreen = ({ navigation }) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Edit Profile</Text>
 
-      {/* Profile Image */}
       <TouchableOpacity onPress={handleProfileImageUpload} activeOpacity={0.7}>
         <Image
           source={{ uri: formData.profileImage }}
@@ -115,7 +114,6 @@ const REditProfileScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* User Name */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>User Name</Text>
         <TextInput
@@ -170,7 +168,6 @@ const REditProfileScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* License Image */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>License Image (Click to View)</Text>
         <TouchableOpacity onPress={handleLicenseView} activeOpacity={0.8}>
@@ -198,8 +195,10 @@ const REditProfileScreen = ({ navigation }) => {
  
 };
 
+
 const styles = StyleSheet.create({
   container: {
+    marginTop:10,
     padding: 20,
     paddingBottom: 50,
     backgroundColor: '#f9f9f9',
@@ -216,12 +215,12 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#356F59',
     marginBottom: 10,
   },
   uploadText: {
     fontSize: 14,
-    color: '#007bff',
+    color: '#356F59',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -262,7 +261,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   editButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#356F59',
     paddingVertical: 15,
     borderRadius: 10,
     marginTop: 30,
@@ -270,7 +269,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#356F59',
     paddingVertical: 15,
     borderRadius: 10,
     marginTop: 30,
@@ -283,5 +282,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+
 
 export default  REditProfileScreen;

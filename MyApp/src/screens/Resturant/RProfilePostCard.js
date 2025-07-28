@@ -44,7 +44,7 @@ const ProfilePostCard = ({ post, currentUserId, onDelete, onEdit, ...props }) =>
             onPress={() => setMenuVisible(true)}
             disabled={loading}
           >
-            <Entypo name="dots-three-vertical" size={20} color="#666" />
+            <Entypo name="dots-three-vertical" size={20} color="red" />
           </TouchableOpacity>
 
           <Modal
@@ -93,29 +93,30 @@ const ProfilePostCard = ({ post, currentUserId, onDelete, onEdit, ...props }) =>
   );
 };
 
+
+
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   menuButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    right: 20,
+    top: 15,
+    padding: 7,
+    borderRadius: 30,
     zIndex: 1,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'white',
   },
   menuContainer: {
     width: 200,
-    backgroundColor: 'white',
+    backgroundColor: '#356F59',
     borderRadius: 10,
     paddingVertical: 10,
     shadowColor: '#000',
@@ -131,14 +132,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   menuOptionText: {
+    color:'white',
     marginLeft: 15,
     fontSize: 16,
   },
   divider: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: 'blue',
     marginHorizontal: 10,
   },
 });
 
 export default ProfilePostCard;
+

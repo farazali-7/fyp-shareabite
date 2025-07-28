@@ -13,6 +13,8 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Entypo } from '@expo/vector-icons';
+
 import { getUserProfile, deletePost, editPost } from '../../apis/userAPI';
 import ProfilePostCard from './RProfilePostCard';
 
@@ -31,7 +33,7 @@ const RProfileScreen = () => {
     description: '',
     foodType: '',
     quantity: '',
-    bestBefore: ''
+    bestBefore: '',
   });
 
   const fetchProfile = async () => {
@@ -71,33 +73,28 @@ const RProfileScreen = () => {
 
   const handleDeletePost = async (postId) => {
     if (isDeleting) return;
-    try {
-      Alert.alert(
-        'Confirm Delete',
-        'Are you sure you want to delete this post?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            onPress: async () => {
-              setIsDeleting(true);
-              try {
-                await deletePost(postId);
-                await fetchProfile();
-              } catch {
-                Alert.alert('Error', 'Failed to delete post.');
-              } finally {
-                setIsDeleting(false);
-              }
-            },
-            style: 'destructive',
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this post?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await deletePost(postId);
+              await fetchProfile();
+            } catch {
+              Alert.alert('Error', 'Failed to delete post.');
+            } finally {
+              setIsDeleting(false);
+            }
           },
-        ]
-      );
-    } catch {
-      Alert.alert('Error', 'Failed to delete post.');
-      setIsDeleting(false);
-    }
+          style: 'destructive',
+        },
+      ]
+    );
   };
 
   const handleEditPost = (post) => {
@@ -106,16 +103,13 @@ const RProfileScreen = () => {
       description: post.description || '',
       foodType: post.foodType || '',
       quantity: post.quantity ? post.quantity.toString() : '',
-      bestBefore: post.bestBefore || ''
+      bestBefore: post.bestBefore || '',
     });
     setEditModalVisible(true);
   };
 
   const handleFormChange = (field, value) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const saveEditedPost = async () => {
@@ -124,7 +118,7 @@ const RProfileScreen = () => {
       setIsEditing(true);
       await editPost(editingPost._id, {
         ...editForm,
-        quantity: Number(editForm.quantity)
+        quantity: Number(editForm.quantity),
       });
       setEditModalVisible(false);
       await fetchProfile();
@@ -149,22 +143,36 @@ const RProfileScreen = () => {
 
   return (
     <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <View style={styles.topSection}>
-        <Image
-          source={{ uri: profile?.profileImage || 'https://i.pravatar.cc/150?img=12' }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.userName}>{profile?.userName}</Text>
-        <Text style={styles.roleText}>
-          Role: {profile?.role === 'restaurant' ? 'Eatery' : 'Charity House'}
-        </Text>
-        <TouchableOpacity onPress={handleViewDetails}>
-          <Text style={styles.linkText}>View Full Details</Text>
-        </TouchableOpacity>
-      </View>
+  style={styles.container}
+  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+>
+  {/* Header */}
+  <View style={styles.headerContainer}>
+    <Text style={styles.headerTitle}></Text>
+    <TouchableOpacity onPress={() => navigation.openDrawer()}>
+      <Entypo name="dots-three-vertical" size={22} color="#356F59" />
+    </TouchableOpacity>
+  </View>
+
+  <View style={styles.backgroundWrapper}>
+    <View style={styles.topBackground} />
+    <View style={styles.bottomBackground} />
+
+    <View style={styles.topSection}>
+      <Image
+        source={{ uri: profile?.profileImage || 'https://i.pravatar.cc/150?img=12' }}
+        style={styles.profileImage}
+      />
+      <Text style={styles.userName}>{profile?.userName}</Text>
+      <Text style={styles.roleText}>
+        Role: {profile?.role === 'restaurant' ? 'Eatery' : 'Charity House'}
+      </Text>
+      <TouchableOpacity onPress={handleViewDetails}>
+        <Text style={styles.linkText}>View Full Details</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+
 
       <View style={styles.divider} />
 
@@ -192,50 +200,27 @@ const RProfileScreen = () => {
       <Modal
         visible={editModalVisible}
         animationType="slide"
-        transparent={true}
+        transparent
         onRequestClose={() => !isEditing && setEditModalVisible(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Post</Text>
 
-            <Text style={styles.inputLabel}>Food Type</Text>
-            <TextInput
-              style={styles.editInput}
-              value={editForm.foodType}
-              onChangeText={(text) => handleFormChange('foodType', text)}
-              placeholder="Enter food type"
-              editable={!isEditing}
-            />
-
-            <Text style={styles.inputLabel}>Quantity</Text>
-            <TextInput
-              style={styles.editInput}
-              value={editForm.quantity}
-              onChangeText={(text) => handleFormChange('quantity', text)}
-              placeholder="Enter quantity"
-              keyboardType="numeric"
-              editable={!isEditing}
-            />
-
-            <Text style={styles.inputLabel}>Best Before</Text>
-            <TextInput
-              style={styles.editInput}
-              value={editForm.bestBefore}
-              onChangeText={(text) => handleFormChange('bestBefore', text)}
-              placeholder="Enter best before date"
-              editable={!isEditing}
-            />
-
-            <Text style={styles.inputLabel}>Description</Text>
-            <TextInput
-              style={[styles.editInput, { minHeight: 100 }]}
-              multiline
-              value={editForm.description}
-              onChangeText={(text) => handleFormChange('description', text)}
-              placeholder="Enter description"
-              editable={!isEditing}
-            />
+            {['foodType', 'quantity', 'bestBefore', 'description'].map((field) => (
+              <View key={field}>
+                <Text style={styles.inputLabel}>{field.replace(/([A-Z])/g, ' $1')}</Text>
+                <TextInput
+                  style={[styles.editInput, field === 'description' && { minHeight: 100 }]}
+                  multiline={field === 'description'}
+                  keyboardType={field === 'quantity' ? 'numeric' : 'default'}
+                  value={editForm[field]}
+                  onChangeText={(text) => handleFormChange(field, text)}
+                  placeholder={`Enter ${field}`}
+                  editable={!isEditing}
+                />
+              </View>
+            ))}
 
             <View style={styles.modalButtonContainer}>
               <TouchableOpacity
@@ -250,11 +235,7 @@ const RProfileScreen = () => {
                 onPress={saveEditedPost}
                 disabled={isEditing}
               >
-                {isEditing ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text style={styles.buttonText}>Save</Text>
-                )}
+                {isEditing ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Save</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -264,51 +245,186 @@ const RProfileScreen = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: {
+    marginTop:10,
+    flex: 1,
+    backgroundColor: 'white',
+  },
+
+  headerContainer: {
+    marginTop: 20,
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  backgroundWrapper: {
+    position: 'relative',
+    backgroundColor:"#356F59",
+  },
+
+  topBackground: {
+    backgroundColor: 'white',
+    height: 180,
+     borderBottomLeftRadius: 200,
+  borderBottomRightRadius: 200,
+ 
+  },
+
+  bottomBackground: {
+    position: 'absolute',
+    top: 125,
+    left: 0,
+    right: 0,
+    height: 180,
+    backgroundColor: 'white',
+  borderTopLeftRadius: 200,
+  borderTopRightRadius: 200,
+  },
+
   topSection: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 4,
     paddingHorizontal: 16,
-    backgroundColor: '#F5F9FF',
+    marginTop: -140,
   },
+
   profileImage: {
-    width: 100, height: 100, borderRadius: 50,
-    borderWidth: 2, borderColor: '#00CCCC',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: 'white',
+    marginBottom: 0,
+    backgroundColor: '#fff',
   },
-  userName: { fontSize: 22, fontWeight: 'bold', marginTop: 12, color: '#000099' },
-  roleText: { fontSize: 14, color: '#555', marginTop: 4 },
-  linkText: { color: '#00CCCC', marginTop: 10, fontWeight: '600' },
-  divider: { height: 1, backgroundColor: '#00CCCC', marginHorizontal: 20, marginVertical: 16 },
-  postsContainer: { paddingHorizontal: 16, paddingBottom: 24 },
-  postsHeader: { fontSize: 18, fontWeight: 'bold', color: '#000099', marginBottom: 10 },
-  emptyText: { textAlign: 'center', color: 'gray', fontSize: 14, marginTop: 20 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 8,
+    color: 'black',
+  },
+
+  roleText: {
+    fontSize: 14,
+    color: 'b;ack',
+    marginTop: 4,
+  },
+
+  linkText: {
+    color: '#356F59',
+    marginTop: 10,
+    fontStyle: 'italic',
+    textDecorationLine: 'underline',
+  },
+
+  divider: {
+    height: 4,
+    backgroundColor: 'green',
+  },
+
+  postsContainer: {
+    backgroundColor:'#e6e6e6',
+    paddingHorizontal: 1,
+    paddingBottom: 24,
+  },
+
+  postsHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+    marginBottom: 10,
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    color: 'gray',
+    fontSize: 14,
+    marginTop: 20,
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   modalContainer: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
+
   modalContent: {
-    width: '90%', backgroundColor: 'white',
-    borderRadius: 10, padding: 20, maxHeight: '80%',
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    maxHeight: '80%',
   },
+
   modalTitle: {
-    fontSize: 18, fontWeight: 'bold',
-    color: '#000099', marginBottom: 15, textAlign: 'center',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+    marginBottom: 15,
+    textAlign: 'center',
   },
-  inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 5, color: '#333' },
+
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 5,
+    color: '#333',
+  },
+
   editInput: {
-    borderWidth: 1, borderColor: '#ddd',
-    borderRadius: 5, padding: 10, marginBottom: 15, fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    fontSize: 14,
   },
-  modalButtonContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+
   modalButton: {
-    padding: 12, borderRadius: 5, width: '48%',
-    alignItems: 'center', justifyContent: 'center',
+    padding: 12,
+    borderRadius: 5,
+    width: '48%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cancelButton: { backgroundColor: '#ccc' },
-  saveButton: { backgroundColor: '#000099' },
-  buttonText: { color: 'white', fontWeight: 'bold' },
+
+  cancelButton: {
+    backgroundColor: '#ccc',
+  },
+
+  saveButton: {
+    backgroundColor: '#356F59',
+  },
+
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });
+
 
 export default RProfileScreen;

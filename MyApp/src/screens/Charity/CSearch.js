@@ -81,20 +81,21 @@ export default CSearchScreen;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:25,
+    marginTop: 37,
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 12,
+    backgroundColor: 'white',
+    padding: 2,
   },
   input: {
-    height: 48,
+        color: 'white',
+    height: 55,
     borderRadius: 12,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#356F59',
     paddingHorizontal: 16,
     fontSize: 16,
-    marginBottom: 12,
+    marginBottom: 1,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'white',
   },
   card: {
     flexDirection: 'row',
@@ -115,10 +116,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
     fontWeight: '600',
-  },
-  roleText: {
-    fontSize: 12,
-    color: '#888',
   },
   emptyText: {
     textAlign: 'center',

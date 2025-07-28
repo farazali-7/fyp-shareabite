@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 2,
   },
   userInfo: {
     flexDirection: 'row',
@@ -127,10 +127,10 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: '#999',
+    color: 'black',
   },
   body: {
-    color: '#555',
+    color: 'red',
     marginBottom: 6,
     fontSize: 14,
   },

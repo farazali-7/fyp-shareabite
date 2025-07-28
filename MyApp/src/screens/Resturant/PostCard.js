@@ -8,9 +8,9 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { createRequest } from '../../apis/requestAPI';
-import ImageViewing from 'react-native-image-viewing';
 import { MaterialIcons } from '@expo/vector-icons';
+import ImageViewing from 'react-native-image-viewing';
+import { createRequest } from '../../apis/requestAPI';
 import * as Location from 'expo-location';
 import socket from '../../../socket';
 
@@ -20,19 +20,32 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'Location permission is required.');
         return;
       }
-      let loc = await Location.getCurrentPositionAsync({});
-      const coords = {
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      };
-      setUserLocation(coords);
+      const loc = await Location.getCurrentPositionAsync({});
+      setUserLocation(loc.coords);
     })();
   }, []);
+
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+  const formatShortDate = (dateString) =>
+    new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
 
   const openGoogleMaps = () => {
     if (!userLocation || !post.latitude || !post.longitude) {
@@ -56,22 +69,16 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
 
   const handleRequest = async () => {
     try {
-      if (!post._id || !post.createdBy || !currentUserId) {
-        Alert.alert('Missing Info', 'Post or user data is missing.');
-        return;
-      }
-
       const payload = {
         postId: post._id,
         requesterId: currentUserId,
         receiverId: post.createdBy,
       };
-
       await createRequest(payload);
       socket.emit('request_food', payload);
       Alert.alert('Request Sent', 'Your food request has been sent.');
     } catch (err) {
-      Alert.alert('Error', 'You already requested this post.');
+      Alert.alert('Error', err.message || 'Request failed');
     }
   };
 
@@ -79,101 +86,155 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
 
   return (
     <View style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.userName}>{post.userName}</Text>
+        <Text style={styles.timestamp}>{formatDate(post.createdAt)}</Text>
+      </View>
+
       {hasImages && (
         <TouchableOpacity onPress={() => setVisible(true)}>
           <Image source={{ uri: post.images[0] }} style={styles.image} />
+          <ImageViewing
+            images={post.images.map((uri) => ({ uri }))}
+            imageIndex={0}
+            visible={visible}
+            onRequestClose={() => setVisible(false)}
+          />
         </TouchableOpacity>
       )}
 
-      {hasImages && (
-        <ImageViewing
-          images={post.images.map((uri) => ({ uri }))}
-          imageIndex={0}
-          visible={visible}
-          onRequestClose={() => setVisible(false)}
-        />
-      )}
-
-      <Text style={styles.detail}>User: {post.userName}</Text>
-      <Text style={styles.detail}>Food Type: {post.foodType}</Text>
-      <Text style={styles.detail}>Quantity: {post.quantity}</Text>
-      <Text style={styles.detail}>Best Before: {post.bestBefore}</Text>
       <Text style={styles.detail}>
-        Created At: {new Date(post.createdAt).toLocaleString()}
+        {post.quantity} {post.foodType} meals | Best before: {formatShortDate(post.bestBefore)}
       </Text>
 
-      <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
-        <MaterialIcons name="location-on" size={24} color="red" />
-        <Text style={styles.trackText}>Track Location</Text>
-      </TouchableOpacity>
-
-      {post.status === 'fulfilled' ? (
-        <Text style={styles.pickedText}>Food Picked</Text>
-      ) : (
-        canRequest && (
-          <TouchableOpacity style={styles.requestButton} onPress={handleRequest}>
-            <Text style={styles.requestText}>Request Food</Text>
-          </TouchableOpacity>
-        )
+      {post.description && (
+        <Text style={styles.description}>Details: {post.description}</Text>
       )}
 
-      <Text style={styles.description}>{post.description}</Text>
+      <View style={styles.actionRow}>
+        <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
+          <MaterialIcons name="location-on" size={20} color="red" />
+          <Text style={styles.trackText}>Track Location</Text>
+        </TouchableOpacity>
+
+        {post.status === 'fulfilled' ? (
+          <Text style={styles.pickedText}>Food Picked</Text>
+        ) : (
+          canRequest && (
+            <TouchableOpacity style={styles.requestButton} onPress={handleRequest}>
+              <Text style={styles.requestText}>Request Food</Text>
+            </TouchableOpacity>
+          )
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    margin: 12,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: 'white',
+    marginVertical: 12,
+    marginHorizontal:20,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 4,
+    borderColor: '#356F59',
+    shadowColor: '#1E4635',
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  userName: {
+    color: '#356F59',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  timestamp: {
+    color: 'black',
+    fontSize: 13,
+  },
+
   image: {
-    height: 180,
+    height: 200,
     width: '100%',
-    borderRadius: 8,
-    marginVertical: 10,
+    borderRadius: 12,
+    marginVertical: 1,
+    resizeMode: 'cover',
+    backgroundColor: '#E0E0E0',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
+
   detail: {
-    fontSize: 14,
+    fontSize: 15,
     marginVertical: 2,
+    color: 'black',
+    lineHeight: 22,
   },
+
+  description: {
+    marginTop: 0,
+    paddingTop:6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+    color: 'black',
+    fontSize: 15,
+    lineHeight: 18,
+    fontStyle: 'italic',
+  },
+
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 6,
   },
   trackText: {
-    marginLeft: 6,
-    color: '#1e88e5',
+    marginLeft: 4,
+    color: '#0080ff',
     fontWeight: '600',
+    fontSize: 15,
+    textDecorationLine: 'underline',
   },
-  description: {
-    marginTop: 6,
-    fontStyle: 'italic',
-    color: '#555',
-  },
+
   requestButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 10,
+    backgroundColor: '#00b300',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
   requestText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  pickedText: {
-    marginTop: 10,
-    color: '#d9534f',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#FFFFFF',
+    fontWeight: '600',
     fontSize: 16,
+    letterSpacing: 0.5,
+  },
+
+  pickedText: {
+    color: 'red',
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 18,
+    textDecorationLine: 'line-through',
   },
 });

@@ -35,7 +35,7 @@ export default UserPendingScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: '#356F59',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -44,12 +44,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginTop: 20,
-    color: '#333',
+    color: 'white',
   },
   description: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#555',
+    color: 'white',
     marginTop: 10,
     lineHeight: 22,
     marginBottom: 30,

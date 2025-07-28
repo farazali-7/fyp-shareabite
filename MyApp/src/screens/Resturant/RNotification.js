@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     flex: 1,
     padding: 12,
-    backgroundColor: '#fff',
+    backgroundColor: '#356F59',
   },
   empty: {
     textAlign: 'center',

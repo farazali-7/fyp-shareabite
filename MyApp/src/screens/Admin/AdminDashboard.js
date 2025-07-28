@@ -64,11 +64,13 @@ const AdminDashboard = ({ navigation }) => {
     <TouchableOpacity
       key={license._id}
       style={styles.licenseRow}
-      onPress={() => navigation.navigate('LicenseDetailModal', { 
-        license, 
-        onUpdate: fetchLicenses,
-        fromTab: tab // Pass which tab the license came from
-      })}
+      onPress={() =>
+        navigation.navigate('LicenseDetailModal', {
+          license,
+          onUpdate: fetchLicenses,
+          fromTab: tab,
+        })
+      }
     >
       <Text style={styles.licenseId}>{license._id?.slice(-4) || '----'}</Text>
       <View style={styles.licenseInfo}>
@@ -82,16 +84,28 @@ const AdminDashboard = ({ navigation }) => {
       </View>
       {tab === 'Pending' ? (
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(license)}>
+          <TouchableOpacity
+            style={styles.approveButton}
+            onPress={() => handleApprove(license)}
+          >
             <Icon name="check" size={20} color="green" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(license)}>
+          <TouchableOpacity
+            style={styles.rejectButton}
+            onPress={() => handleReject(license)}
+          >
             <Icon name="times" size={20} color="red" />
           </TouchableOpacity>
         </View>
       ) : (
-        <Text style={tab === 'Approved' ? styles.approvedDate : styles.rejectedDate}>
-          {tab === 'Approved' ? license.approvedOn || 'Approved' : license.rejectedOn || 'Rejected'}
+        <Text
+          style={
+            tab === 'Approved' ? styles.approvedDate : styles.rejectedDate
+          }
+        >
+          {tab === 'Approved'
+            ? license.approvedOn || 'Approved'
+            : license.rejectedOn || 'Rejected'}
         </Text>
       )}
     </TouchableOpacity>
@@ -126,7 +140,13 @@ const AdminDashboard = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>LICENSE APPROVAL SYSTEM</Text>
+      <View style={styles.customHeader}>
+        <Text style={styles.headerTitle}>License Approval System</Text>
+       <TouchableOpacity onPress={() => navigation.openDrawer()}>
+          <Icon name="ellipsis-v" size={33} color="#356F59" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.tabsContainer}>
         {['Pending', 'Approved', 'Rejected'].map((tab) => (
           <TouchableOpacity
@@ -146,6 +166,7 @@ const AdminDashboard = ({ navigation }) => {
           </TouchableOpacity>
         ))}
       </View>
+
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
@@ -154,9 +175,8 @@ const AdminDashboard = ({ navigation }) => {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <TouchableOpacity style={styles.filterButton}>
-        </TouchableOpacity>
       </View>
+
       {renderTabContent()}
     </View>
   );
@@ -164,35 +184,55 @@ const AdminDashboard = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    marginTop: 30,
     flex: 1,
     padding: 15,
-    backgroundColor: 'skyblue',
+    backgroundColor: 'white',
   },
-  header: {
-    fontSize: 20,
+
+  customHeader: {
+    
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingTop: 10,
+    paddingBottom: 14,
+    marginBottom: 10,
+  },
+
+  headerTitle: {
+    paddingTop:8,
+    backgroundColor:'#356F59',
+textAlign: 'center',
+    fontSize: 22,
+    width:280,
+    height:50,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+    color: 'white',
   },
+
   tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 15,
   },
+
   tab: {
-    flex: 1,
-    padding: 10,
     alignItems: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: '#ddd',
+    borderBottomColor: 'white',
   },
+
   activeTab: {
-    borderBottomColor: '#4a90e2',
+    borderBottomColor: '#00cc00',
+
   },
+
   tabText: {
     fontWeight: '600',
   },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -202,21 +242,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
   },
+
   searchIcon: {
     marginRight: 10,
   },
+
   searchInput: {
     flex: 1,
     height: 40,
   },
-  filterButton: {
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-  },
+
   tabContent: {
     flex: 1,
   },
+
   licenseRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -224,43 +263,64 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+
   licenseId: {
     width: 40,
     fontWeight: 'bold',
   },
+
   licenseInfo: {
     flex: 1,
     marginLeft: 10,
   },
+
   licenseName: {
     fontWeight: '600',
   },
+
   licenseRole: {
     color: '#555',
     fontSize: 12,
   },
+
   rejectReason: {
     color: '#b22222',
     fontSize: 12,
   },
+
   actions: {
     flexDirection: 'row',
   },
+
   approveButton: {
     padding: 8,
     marginRight: 5,
   },
+
   rejectButton: {
     padding: 8,
   },
+
   approvedDate: {
-    color: '#2ecc71',
+    paddingTop:3,
+paddingLeft:9,
+    color: 'white',
     fontSize: 12,
+    backgroundColor:'green',
+    width:70,
+    height:30
   },
+
   rejectedDate: {
-    color: '#e67e22',
+     paddingTop:3,
+paddingLeft:9,
+    color: 'white',
     fontSize: 12,
+    backgroundColor:'red',
+    width:70,
+    height:30
   },
+
   noResults: {
     textAlign: 'center',
     marginTop: 20,

@@ -77,7 +77,7 @@ const AdminStack = () => {
 const AdminDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator drawerContent={(props) => <AdminDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+    <Drawer.Navigator drawerContent={(props) => <AdminDrawerContent {...props} />} screenOptions={{ headerShown: false }}>
       <Drawer.Screen name="AdminDashboard" component={AdminDashboard} />
     </Drawer.Navigator>
   );
@@ -109,22 +109,76 @@ const RestaurantTabs = () => {
   const Tab = createBottomTabNavigator();
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          if (route.name === "Home") iconName = focused ? "home" : "home-outline";
-          else if (route.name === "Search") iconName = focused ? "search" : "search-outline";
-          else if (route.name === "Notification") iconName = focused ? "notifications" : "notifications-outline";
-          else if (route.name === "Profile") iconName = focused ? "person" : "person-outline";
+          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Search') iconName = focused ? 'search' : 'search-outline';
+          else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
+          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "tomato",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: 'white',
+        tabBarInactiveTintColor: 'white',
+        tabBarStyle: {
+          backgroundColor: '#356F59',
+          height: 60,
+          borderTopWidth: 1,
+          paddingBottom: 6,
+          paddingTop: 3,
+          borderRadius: 20,
+          marginHorizontal: 1,
+          marginBottom: 1,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          shadowOffset: { width: 0, height: -2 },
+        },
+        tabBarLabelStyle: {
+          fontSize: 14,
+          fontWeight: 'bold',
+        },
         headerShown: false,
       })}
-      initialRouteName="Home"
     >
-      <Tab.Screen name="Home" component={RHomeScreen} options={{ headerShown: true }} />
+
+
+      <Tab.Screen
+        name="Home"
+        component={RHomeScreen}
+        options={{
+          headerTitle: "EATRY HOME",
+          headerShown: true,
+          headerStyle: {
+            paddingTop: 0,
+            backgroundColor: '#356F59',
+            borderBottomWidth: 0,
+            height: 90,
+
+          },
+          headerTitleStyle: {
+            color: 'white',
+            fontWeight: '600',
+            fontSize: 25,
+            fontFamily: 'System',
+            textTransform: 'capitalize',
+            letterSpacing: 0.2,
+          },
+          headerTintColor: 'white',
+          headerTitleAlign: 'center',
+          headerRightContainerStyle: {
+            paddingRight: 1,
+          },
+          headerTitleContainerStyle: {
+            paddingBottom: 8,
+          },
+
+        }}
+      />
+
       <Tab.Screen name="Search" component={RSearchScreen} />
       <Tab.Screen name="Notification" component={RNotificationScreen} />
       <Tab.Screen name="Profile" component={RestaurantDrawerNavigator} />
@@ -135,9 +189,12 @@ const RestaurantTabs = () => {
 const RestaurantDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator drawerContent={(props) => <RDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+    <Drawer.Navigator   screenOptions={{ headerShown: false }}
+
+    drawerContent={(props) => <RDrawerContent {...props} />} >
       <Drawer.Screen name="Profile" component={RProfileScreen} />
     </Drawer.Navigator>
+    
   );
 };
 
@@ -172,13 +229,66 @@ const CharityTabs = () => {
           else if (route.name === "Profile") iconName = focused ? "person" : "person-outline";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "tomato",
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: 'white',
+        tabBarInactiveTintColor: 'white',
+        tabBarStyle: {
+          backgroundColor: '#356F59',
+          height: 60,
+          borderTopWidth: 1,
+          paddingBottom: 6,
+          paddingTop: 3,
+          borderRadius: 20,
+          marginHorizontal: 1,
+          marginBottom: 1,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          shadowOffset: { width: 0, height: -2 },
+        },
+        tabBarLabelStyle: {
+          fontSize: 14,
+          fontWeight: 'bold',
+        },
         headerShown: false,
       })}
-      initialRouteName="Home"
     >
-      <Tab.Screen name="Home" component={CHomeScreen} options={{ headerShown: true }} />
+      
+
+ <Tab.Screen
+        name="Home"
+        component={CHomeScreen}
+        options={{
+          headerTitle: "Charity HOME",
+          headerShown: true,
+          headerStyle: {
+            paddingTop: 0,
+            backgroundColor: '#356F59',
+            borderBottomWidth: 0,
+            height: 90,
+
+          },
+          headerTitleStyle: {
+            color: 'white',
+            fontWeight: '600',
+            fontSize: 25,
+            fontFamily: 'System',
+            textTransform: 'capitalize',
+            letterSpacing: 0.2,
+          },
+          headerTintColor: 'white',
+          headerTitleAlign: 'center',
+          headerRightContainerStyle: {
+            paddingRight: 1,
+          },
+          headerTitleContainerStyle: {
+            paddingBottom: 8,
+          },
+
+        }}
+      />
+
+
       <Tab.Screen name="Search" component={CSearchScreen} />
       <Tab.Screen name="Notification" component={CNotificationScreen} />
       <Tab.Screen name="Profile" component={CharityDrawerNavigator} />
@@ -189,7 +299,7 @@ const CharityTabs = () => {
 const CharityDrawerNavigator = () => {
   const Drawer = createDrawerNavigator();
   return (
-    <Drawer.Navigator drawerContent={(props) => <CDrawerContent {...props} />} screenOptions={{ headerShown: true }}>
+    <Drawer.Navigator drawerContent={(props) => <CDrawerContent {...props} />} screenOptions={{ headerShown: false }}>
       <Drawer.Screen name="Profile" component={CProfileScreen} />
     </Drawer.Navigator>
   );

@@ -80,12 +80,12 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: '#999',
+    color: 'black',
   },
   body: {
     fontSize: 14,
-    color: '#555',
-    marginBottom: 6,
+    color: 'black',
+    marginBottom: 3,
   },
   foodDetails: {
     fontSize: 15,
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     color: '#444',
   },
   statusText: {
-    marginTop: 8,
+    marginTop: 4,
     fontSize: 14,
     fontWeight: 'bold',
   },

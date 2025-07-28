@@ -26,7 +26,7 @@ export default function RContactUsScreen() {
       </Text>
 
       <View style={styles.card}>
-        <FontAwesome name="envelope" size={24} color="#00CCCC" />
+        <FontAwesome name="envelope" size={24} color="#356F59" />
         <View style={styles.info}>
           <Text style={styles.label}>Email</Text>
           <TouchableOpacity onPress={() => Linking.openURL(`mailto:${adminInfo.email}`)}>
@@ -36,7 +36,7 @@ export default function RContactUsScreen() {
       </View>
 
       <View style={styles.card}>
-        <MaterialIcons name="phone" size={24} color="#00CCCC" />
+        <MaterialIcons name="phone" size={24} color="#356F59" />
         <View style={styles.info}>
           <Text style={styles.label}>Phone</Text>
           <TouchableOpacity onPress={() => Linking.openURL(`tel:${adminInfo.phone}`)}>
@@ -46,7 +46,7 @@ export default function RContactUsScreen() {
       </View>
 
       <View style={styles.card}>
-        <Entypo name="location-pin" size={24} color="#00CCCC" />
+        <Entypo name="location-pin" size={24} color="#356F59" />
         <View style={styles.info}>
           <Text style={styles.label}>Office Address</Text>
           <Text style={styles.text}>{adminInfo.address}</Text>
@@ -54,7 +54,7 @@ export default function RContactUsScreen() {
       </View>
 
       <View style={styles.card}>
-        <FontAwesome name="globe" size={24} color="#00CCCC" />
+        <FontAwesome name="globe" size={24} color="#356F59" />
         <View style={styles.info}>
           <Text style={styles.label}>Website</Text>
           <TouchableOpacity onPress={() => Linking.openURL(adminInfo.website)}>
@@ -76,9 +76,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
+    backgroundColor:'#356F59',
     fontSize: 30,
     fontWeight: 'bold',
-    color: '#000099',
+    color: 'white',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     borderLeftWidth: 5,
-    borderLeftColor: '#00CCCC',
+    borderLeftColor: '#356F59',
     elevation: 2,
   },
   info: {
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
     fontSize: 14,
     textAlign: 'center',
-    color: '#00CCCC',
+    color: '#356F59',
     fontStyle: 'italic',
   },
 });
