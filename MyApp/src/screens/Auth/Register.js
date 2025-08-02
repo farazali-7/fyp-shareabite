@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   selectedRole: {
-    backgroundColor: "#00CCCC",
+    backgroundColor: "#356F59",
   },
   roleText: {
     fontSize: 16,
@@ -202,14 +202,14 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 12,
     borderWidth: 1,
-    borderColor: "#00CCCC",
+    borderColor: "#356F59",
     borderRadius: 10,
     marginBottom: 12,
     backgroundColor: "#F9F9F9",
     color: "#000099",
   },
   uploadButton: {
-    backgroundColor: "#00CCCC",
+    backgroundColor: "#356F59",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,

@@ -319,6 +319,7 @@ const AuthStack = () => {
   );
 };
 
+
 const RootStack = createNativeStackNavigator();
 
 export default function App() {

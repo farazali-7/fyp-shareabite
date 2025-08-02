@@ -16,16 +16,7 @@ export const createRequest = async ({ postId, requesterId, receiverId }) => {
   }
 };
 
-// Cancel a food request
-export const cancelRequest = async (requestId) => {
-  try {
-    const res = await axiosInstance.delete(`/requests/cancel/${requestId}`);
-    return res.data;
-  } catch (err) {
-    console.error('Error cancelling request:', err.response?.data || err.message);
-    throw err;
-  }
-};
+
 
 // Get notifications for sent requests (by charity)
 export const getRequestedNotifications = async (userId) => {
@@ -55,5 +46,26 @@ export const getCharityNotifications = async (userId) => {
   } catch (err) {
     console.error('Error fetching charity notifications:', err.response?.data || err.message);
     return [];
+  }
+};
+
+export const checkExistingRequest = async (postId, requesterId) => {
+  try {
+    const res = await axiosInstance.get(`/requests/check/${postId}/${requesterId}`);
+    return res.data; 
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const cancelRequest = async ({ postId, requesterId }) => {
+  try {
+    const res = await axiosInstance.post('/requests/cancel', {
+      postId,
+      requesterId,
+    });
+    return res.data;
+  } catch (err) {
+    throw err;
   }
 };

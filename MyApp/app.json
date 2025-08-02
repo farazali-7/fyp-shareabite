@@ -5,13 +5,13 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "usesCleartextTraffic": true,
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon1.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-screen.png",
       "resizeMode": "cover",
-      "backgroundColor": "#292ccc"
+      "backgroundColor": "#356F59"
     },
     "android": {
       "package": "com.shareabite.app",

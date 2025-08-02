@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   selectedRole: {
-    backgroundColor: "#00CCCC",
+    backgroundColor: "#356F59",
   },
   roleText: {
     fontSize: 16,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 12,
     borderWidth: 1,
-    borderColor: "#00CCCC",
+    borderColor: "#356F59",
     borderRadius: 10,
     marginBottom: 14,
     backgroundColor: "#F9F9F9",
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   link: {
-    color: "#00CCCC",
+    color: "#356F59",
     marginTop: 14,
     fontSize: 14,
     textDecorationLine: "underline",

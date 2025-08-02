@@ -10,7 +10,7 @@ export const createRequest = async (req, res) => {
   try {
     const { postId, requesterId, receiverId } = req.body;
 
- 
+
 
     if (!postId || !requesterId || !receiverId) {
       return res.status(400).json({ message: "Missing postId, requesterId, or receiverId" });
@@ -26,14 +26,14 @@ export const createRequest = async (req, res) => {
     const newRequest = await FoodRequest.create({ postId, requesterId, receiverId });
 
 
-await Notification.create({
-  user: receiverId,             // who will receive the notification
-  requester: requesterId,       // who sent it
-  post: postId,
-  type: 'request',
-  title: 'New Food Request',
-  description: 'A charity has requested your food post.',
-});
+    await Notification.create({
+      user: receiverId,             // who will receive the notification
+      requester: requesterId,       // who sent it
+      post: postId,
+      type: 'request',
+      title: 'New Food Request',
+      description: 'A charity has requested your food post.',
+    });
 
     res.status(201).json(newRequest);
   } catch (err) {
@@ -88,7 +88,7 @@ export const getRequestedNotifications = async (req, res) => {
     );
 
     if (enrichedNotifications.length > 0) {
-//
+      //
     }
 
     res.json(enrichedNotifications);
@@ -284,5 +284,49 @@ export const getCharityNotifications = async (req, res) => {
   } catch (err) {
     console.error('Error in getCharityNotifications:', err);
     res.status(500).json({ error: 'Failed to fetch charity notifications.' });
+  }
+};
+
+export const checkExistingRequest = async (req, res) => {
+  try {
+    const { postId, requesterId } = req.params;
+
+    if (!postId || !requesterId) {
+      return res.status(400).json({ message: 'Missing postId or requesterId' });
+    }
+
+    const exists = await FoodRequest.findOne({ postId, requesterId });
+
+    res.status(200).json({ exists: !!exists });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error while checking request' });
+  }
+};
+
+export const cancelRequest = async (req, res) => {
+  try {
+    const { postId, requesterId } = req.body;
+
+    const postObjectId = new mongoose.Types.ObjectId(postId);
+    const requesterObjectId = new mongoose.Types.ObjectId(requesterId);
+
+    const deletedRequest = await FoodRequest.findOneAndDelete({
+      postId: postObjectId,
+      requesterId: requesterObjectId,
+    });
+
+    if (!deletedRequest) {
+      return res.status(404).json({ message: 'Request not found.' });
+    }
+
+    await Notification.findOneAndDelete({
+      post: postObjectId,
+      requester: requesterObjectId,
+      type: 'request',
+    });
+
+    res.status(200).json({ message: 'Request and its notification cancelled successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal server error.' });
   }
 };

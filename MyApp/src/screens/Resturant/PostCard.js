@@ -10,24 +10,40 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import ImageViewing from 'react-native-image-viewing';
-import { createRequest } from '../../apis/requestAPI';
+import {
+  createRequest,
+  checkExistingRequest,
+  cancelRequest,
+} from '../../apis/requestAPI';
 import * as Location from 'expo-location';
 import socket from '../../../socket';
 
 export default function PostCard({ post, currentUserId, currentUserRole }) {
   const [visible, setVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [hasRequested, setHasRequested] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({});
+        setUserLocation(loc.coords);
+      } else {
         Alert.alert('Permission Denied', 'Location permission is required.');
-        return;
       }
-      const loc = await Location.getCurrentPositionAsync({});
-      setUserLocation(loc.coords);
     })();
+
+    const checkRequest = async () => {
+      try {
+        const res = await checkExistingRequest(post._id, currentUserId);
+        setHasRequested(res.exists);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to check existing request.');
+      }
+    };
+
+    checkRequest();
   }, []);
 
   const formatDate = (dateString) =>
@@ -76,9 +92,20 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
       };
       await createRequest(payload);
       socket.emit('request_food', payload);
+      setHasRequested(true);
       Alert.alert('Request Sent', 'Your food request has been sent.');
     } catch (err) {
       Alert.alert('Error', err.message || 'Request failed');
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    try {
+      await cancelRequest({ postId: post._id, requesterId: currentUserId });
+      setHasRequested(false);
+      Alert.alert('Request Cancelled', 'You have cancelled the request.');
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Cancellation failed');
     }
   };
 
@@ -104,7 +131,8 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
       )}
 
       <Text style={styles.detail}>
-        {post.quantity} {post.foodType} meals | Best before: {formatShortDate(post.bestBefore)}
+        {post.quantity} {post.foodType} meals | Best before:{' '}
+        {formatShortDate(post.bestBefore)}
       </Text>
 
       {post.description && (
@@ -121,8 +149,16 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
           <Text style={styles.pickedText}>Food Picked</Text>
         ) : (
           canRequest && (
-            <TouchableOpacity style={styles.requestButton} onPress={handleRequest}>
-              <Text style={styles.requestText}>Request Food</Text>
+            <TouchableOpacity
+              style={[
+                styles.requestButton,
+                { backgroundColor: hasRequested ? '#cc0000' : '#00b300' },
+              ]}
+              onPress={hasRequested ? handleCancelRequest : handleRequest}
+            >
+              <Text style={styles.requestText}>
+                {hasRequested ? 'Cancel Request' : 'Request Food'}
+              </Text>
             </TouchableOpacity>
           )
         )}
@@ -135,7 +171,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     marginVertical: 12,
-    marginHorizontal:20,
+    marginHorizontal: 20,
     padding: 20,
     borderRadius: 20,
     borderWidth: 4,
@@ -146,7 +182,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 8,
   },
-
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -162,7 +197,6 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 13,
   },
-
   image: {
     height: 200,
     width: '100%',
@@ -173,17 +207,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
-
   detail: {
     fontSize: 15,
     marginVertical: 2,
     color: 'black',
     lineHeight: 22,
   },
-
   description: {
     marginTop: 0,
-    paddingTop:6,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.2)',
     color: 'black',
@@ -191,14 +223,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontStyle: 'italic',
   },
-
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 10,
   },
-
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -210,9 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textDecorationLine: 'underline',
   },
-
   requestButton: {
-    backgroundColor: '#00b300',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -229,7 +257,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 0.5,
   },
-
   pickedText: {
     color: 'red',
     fontWeight: '600',

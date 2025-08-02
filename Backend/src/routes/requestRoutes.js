@@ -1,7 +1,8 @@
 
 import express from 'express';
-import { createRequest , getRequestedNotifications ,
-    acceptRequest , rejectRequest , getCharityNotifications,
+import { createRequest , 
+    getRequestedNotifications ,cancelRequest , checkExistingRequest,
+    acceptRequest , rejectRequest , getCharityNotifications, 
 } from '../controllers/requestController.js';
 
 const router = express.Router();
@@ -9,7 +10,10 @@ const router = express.Router();
 // Create a food request
 router.post('/create', createRequest);
 
-
+router.get(
+  '/check/:postId/:requesterId',
+  checkExistingRequest
+);router.post('/cancel', cancelRequest);
 //Accept or Reject Routes
 router.post('/accept',acceptRequest );
 router.post('/reject', rejectRequest );
