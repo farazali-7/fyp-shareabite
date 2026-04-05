@@ -1,11 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
-import {
-  View,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect } from "react";
+import { View } from "react-native";
+import * as ExpoSplashScreen from "expo-splash-screen";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
@@ -14,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SocketProvider } from "./src/context/SocketContext";
 
 // Auth Screens
+import SplashScreen from "./src/screens/Auth/SplashScreen";
 import Login from "./src/screens/Auth/Login";
 import RegisterScreen from "./src/screens/Auth/Register";
 import OTPVerificationScreen from "./src/screens/Auth/OtpVerificationScreen";
@@ -111,77 +107,37 @@ const RestaurantTabs = () => {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName;
-          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'Search') iconName = focused ? 'search' : 'search-outline';
+          if (route.name === 'Home')         iconName = focused ? 'home'          : 'home-outline';
+          else if (route.name === 'Search')  iconName = focused ? 'search'        : 'search-outline';
           else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
-          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
-
-          return <Ionicons name={iconName} size={size} color={color} />;
+          else if (route.name === 'Profile') iconName = focused ? 'person'        : 'person-outline';
+          return <Ionicons name={iconName} size={22} color={color} />;
         },
-        tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: 'white',
+        tabBarActiveTintColor: '#356F59',
+        tabBarInactiveTintColor: '#ABABAB',
         tabBarStyle: {
-          backgroundColor: '#356F59',
-          height: 60,
+          backgroundColor: '#FFFFFF',
+          height: 58,
           borderTopWidth: 1,
+          borderTopColor: '#EFEFEF',
           paddingBottom: 6,
-          paddingTop: 3,
-          borderRadius: 20,
-          marginHorizontal: 1,
-          marginBottom: 1,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 2,
-          shadowOffset: { width: 0, height: -2 },
+          paddingTop: 6,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 14,
-          fontWeight: 'bold',
+          fontSize: 11,
+          fontWeight: '500',
         },
         headerShown: false,
       })}
     >
-
-
-      <Tab.Screen
-        name="Home"
-        component={RHomeScreen}
-        options={{
-          headerTitle: "EATRY HOME",
-          headerShown: true,
-          headerStyle: {
-            paddingTop: 0,
-            backgroundColor: '#356F59',
-            borderBottomWidth: 0,
-            height: 90,
-
-          },
-          headerTitleStyle: {
-            color: 'white',
-            fontWeight: '600',
-            fontSize: 25,
-            fontFamily: 'System',
-            textTransform: 'capitalize',
-            letterSpacing: 0.2,
-          },
-          headerTintColor: 'white',
-          headerTitleAlign: 'center',
-          headerRightContainerStyle: {
-            paddingRight: 1,
-          },
-          headerTitleContainerStyle: {
-            paddingBottom: 8,
-          },
-
-        }}
-      />
-
-      <Tab.Screen name="Search" component={RSearchScreen} />
+      <Tab.Screen name="Home"         component={RHomeScreen} />
+      <Tab.Screen name="Search"       component={RSearchScreen} />
       <Tab.Screen name="Notification" component={RNotificationScreen} />
-      <Tab.Screen name="Profile" component={RestaurantDrawerNavigator} />
+      <Tab.Screen name="Profile"      component={RestaurantDrawerNavigator} />
     </Tab.Navigator>
   );
 };
@@ -221,7 +177,7 @@ const CharityTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName;
           if (route.name === "Home") iconName = focused ? "home" : "home-outline";
           else if (route.name === "Search") iconName = focused ? "search" : "search-outline";
@@ -309,6 +265,7 @@ const AuthStack = () => {
   const Stack = createNativeStackNavigator();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
@@ -323,65 +280,15 @@ const AuthStack = () => {
 const RootStack = createNativeStackNavigator();
 
 export default function App() {
-  const [appIsReady, setAppIsReady] = useState(false);
-  const [initialScreen, setInitialScreen] = useState("AuthStack");
-
   useEffect(() => {
-    async function prepare() {
-      try {
-        await SplashScreen.preventAutoHideAsync();
-
-        const token = await AsyncStorage.getItem("token");
-        const user = await AsyncStorage.getItem("user");
-
-        if (!token || !user) {
-          setInitialScreen("AuthStack");
-          return;
-        }
-
-        const parsedUser = JSON.parse(user);
-        switch (parsedUser.role) {
-          case "admin":
-            setInitialScreen("AdminStack");
-            break;
-          case "restaurant":
-            setInitialScreen("RestaurantStackNav");
-            break;
-          case "charity":
-            setInitialScreen("CharityStack");
-            break;
-          default:
-            setInitialScreen("AuthStack");
-        }
-      } catch (e) {
-        setInitialScreen("AuthStack");
-      } finally {
-        setAppIsReady(true);
-      }
-    }
-
-    prepare();
+    ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
   }, []);
-
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
-
-  if (!appIsReady) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
-  }
 
   return (
     <SocketProvider>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <View style={{ flex: 1 }}>
         <NavigationContainer>
-          <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialScreen}>
+          <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName="AuthStack">
             <RootStack.Screen name="AuthStack" component={AuthStack} />
             <RootStack.Screen name="AdminStack" component={AdminStack} />
             <RootStack.Screen name="RestaurantStackNav" component={RestaurantStackNav} />
@@ -395,6 +302,3 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-});

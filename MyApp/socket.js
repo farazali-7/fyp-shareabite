@@ -1,12 +1,14 @@
 import { io } from "socket.io-client";
 
-//  Replace with your backend local IP and port
-const socket = io("http://10.90.162.131:3007", {
+const socket = io(process.env.EXPO_PUBLIC_API_URL, {
   transports: ["websocket"],
-  jsonp: false,
-   autoConnect: true
+  autoConnect: false,  // connect only after token is available
 });
 
-
+export const initSocket = (token) => {
+  if (socket.connected) return;
+  socket.auth = { token };
+  socket.connect();
+};
 
 export default socket;

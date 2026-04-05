@@ -1,28 +1,33 @@
-// src/context/SocketContext.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import socket from '../../socket'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import socket, { initSocket } from '../../socket';
 
 const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [socketInstance] = useState(socket);
 
   useEffect(() => {
+    const connect = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (token) initSocket(token);
+    };
+    connect();
+
     const onConnect = () => setIsConnected(true);
     const onDisconnect = () => setIsConnected(false);
 
-    socketInstance.on('connect', onConnect);
-    socketInstance.on('disconnect', onDisconnect);
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
     return () => {
-      socketInstance.off('connect', onConnect);
-      socketInstance.off('disconnect', onDisconnect);
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
     };
-  }, [socketInstance]);
+  }, []);
 
   return (
-    <SocketContext.Provider value={{ socket: socketInstance, isConnected }}>
+    <SocketContext.Provider value={{ socket, isConnected }}>
       {children}
     </SocketContext.Provider>
   );

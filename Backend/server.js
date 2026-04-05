@@ -4,14 +4,14 @@ import { Server } from "socket.io";
 import connectDB from "./src/config/db.js";
 import cors from "cors";
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+import jwt from "jsonwebtoken";
 
 // Route imports
 import userRoutes from "./src/routes/userRoutes.js";
 import requestRoutes from './src/routes/requestRoutes.js';
 import chatRoutes from "./src/routes/chatRoutes.js";
 import adminRoutes from './src/routes/adminRoutes.js';
+import errorHandler from "./src/middlewares/errorHandler.js";
 
 // Model imports for socket
 import Chat from './src/models/chat.js';
@@ -21,16 +21,14 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST"],
   },
 });
-app.set('io', io); 
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+app.set('io', io);
 
 // Connect MongoDB
 connectDB();
@@ -38,22 +36,36 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 // Routes
 app.use("/api/users", userRoutes);
-app.use("/api/requests", requestRoutes);  
+app.use("/api/requests", requestRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Socket.IO
+// Global error handler (must be after routes)
+app.use(errorHandler);
+
+// Socket.IO — JWT authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("Authentication required"));
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded;
+    next();
+  } catch {
+    next(new Error("Invalid token"));
+  }
+});
+
+// Socket.IO events
 io.on("connection", (socket) => {
-  console.log("Socket connected:", socket.id);
+  console.log("Socket connected:", socket.id, "| user:", socket.user?.userId);
 
   socket.on("join_post_room", (userId) => {
     socket.join(userId);
-    console.log(`User ${userId} joined post room`);
   });
 
   socket.on("joinChat", (chatId) => socket.join(chatId));
@@ -98,9 +110,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Server Listener
-const PORT = process.env.PORT || 3009;
+const PORT = process.env.PORT || 3003;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(` Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
-

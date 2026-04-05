@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RejectionNoticeScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -11,7 +12,8 @@ const RejectionNoticeScreen = ({ route }) => {
     Linking.openURL('mailto:support@yourapp.com?subject=Account Rejection Appeal');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await AsyncStorage.multiRemove(['token', 'user', 'userId']);
     navigation.reset({
       index: 0,
       routes: [{ name: 'AuthStack' }],

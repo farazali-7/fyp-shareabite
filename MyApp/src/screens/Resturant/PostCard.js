@@ -8,102 +8,83 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import ImageViewing from 'react-native-image-viewing';
-import {
-  createRequest,
-  checkExistingRequest,
-  cancelRequest,
-} from '../../apis/requestAPI';
+import { createRequest, checkExistingRequest, cancelRequest } from '../../apis/requestAPI';
 import * as Location from 'expo-location';
 import socket from '../../../socket';
 
+const PRIMARY   = '#356F59';
+const TEXT_DARK = '#1C1C1E';
+const TEXT_GREY = '#6B6B6B';
+const TEXT_LIGHT = '#ABABAB';
+const BORDER    = '#EFEFEF';
+const ERROR     = '#D32F2F';
+
+function timeAgo(dateString) {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function shortDate(dateString) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+}
+
 export default function PostCard({ post, currentUserId, currentUserRole }) {
-  const [visible, setVisible] = useState(false);
+  const [visible,      setVisible]      = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [hasRequested, setHasRequested] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+    Location.requestForegroundPermissionsAsync().then(({ status }) => {
       if (status === 'granted') {
-        const loc = await Location.getCurrentPositionAsync({});
-        setUserLocation(loc.coords);
-      } else {
-        Alert.alert('Permission Denied', 'Location permission is required.');
+        Location.getCurrentPositionAsync({}).then(loc => setUserLocation(loc.coords));
       }
-    })();
+    });
 
-    const checkRequest = async () => {
-      try {
-        const res = await checkExistingRequest(post._id, currentUserId);
-        setHasRequested(res.exists);
-      } catch (error) {
-        Alert.alert('Error', 'Failed to check existing request.');
-      }
-    };
-
-    checkRequest();
+    checkExistingRequest(post._id, currentUserId)
+      .then(res => setHasRequested(res.exists))
+      .catch(() => {});
   }, []);
 
-  const formatDate = (dateString) =>
-    new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-
-  const formatShortDate = (dateString) =>
-    new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-  const openGoogleMaps = () => {
-    if (!userLocation || !post.latitude || !post.longitude) {
-      Alert.alert('Location Error', 'Location data missing.');
-      return;
-    }
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${post.latitude},${post.longitude}&travelmode=driving`;
-    Linking.openURL(url);
-  };
-
-  const isAvailable = () => {
-    const today = new Date();
-    const bestBefore = new Date(post.bestBefore);
-    return today <= bestBefore && post.status !== 'fulfilled';
-  };
+  const isAvailable = () =>
+    new Date() <= new Date(post.bestBefore) && post.status !== 'fulfilled';
 
   const canRequest =
     isAvailable() &&
     currentUserId !== post.createdBy &&
     currentUserRole === 'charity';
 
+  const openMaps = () => {
+    if (!userLocation || !post.latitude || !post.longitude) {
+      Alert.alert('Location unavailable');
+      return;
+    }
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${post.latitude},${post.longitude}&travelmode=driving`;
+    Linking.openURL(url);
+  };
+
   const handleRequest = async () => {
     try {
-      const payload = {
-        postId: post._id,
-        requesterId: currentUserId,
-        receiverId: post.createdBy,
-      };
+      const payload = { postId: post._id, requesterId: currentUserId, receiverId: post.createdBy };
       await createRequest(payload);
       socket.emit('request_food', payload);
       setHasRequested(true);
-      Alert.alert('Request Sent', 'Your food request has been sent.');
     } catch (err) {
       Alert.alert('Error', err.message || 'Request failed');
     }
   };
 
-  const handleCancelRequest = async () => {
+  const handleCancel = async () => {
     try {
       await cancelRequest({ postId: post._id, requesterId: currentUserId });
       setHasRequested(false);
-      Alert.alert('Request Cancelled', 'You have cancelled the request.');
     } catch (err) {
       Alert.alert('Error', err.message || 'Cancellation failed');
     }
@@ -112,156 +93,157 @@ export default function PostCard({ post, currentUserId, currentUserRole }) {
   const hasImages = Array.isArray(post.images) && post.images.length > 0;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.userName}>{post.userName}</Text>
-        <Text style={styles.timestamp}>{formatDate(post.createdAt)}</Text>
-      </View>
+    <View style={styles.row}>
+      {/* Thumbnail */}
+      <TouchableOpacity
+        onPress={() => hasImages && setVisible(true)}
+        activeOpacity={hasImages ? 0.8 : 1}
+      >
+        {hasImages ? (
+          <Image source={{ uri: post.images[0] }} style={styles.thumb} />
+        ) : (
+          <View style={styles.thumbPlaceholder}>
+            <Text style={styles.thumbEmoji}>🍱</Text>
+          </View>
+        )}
+      </TouchableOpacity>
 
       {hasImages && (
-        <TouchableOpacity onPress={() => setVisible(true)}>
-          <Image source={{ uri: post.images[0] }} style={styles.image} />
-          <ImageViewing
-            images={post.images.map((uri) => ({ uri }))}
-            imageIndex={0}
-            visible={visible}
-            onRequestClose={() => setVisible(false)}
-          />
-        </TouchableOpacity>
+        <ImageViewing
+          images={post.images.map(uri => ({ uri }))}
+          imageIndex={0}
+          visible={visible}
+          onRequestClose={() => setVisible(false)}
+        />
       )}
 
-      <Text style={styles.detail}>
-        {post.quantity} {post.foodType} meals | Best before:{' '}
-        {formatShortDate(post.bestBefore)}
-      </Text>
+      {/* Content */}
+      <View style={styles.content}>
+        {/* Top row */}
+        <View style={styles.topRow}>
+          <Text style={styles.userName} numberOfLines={1}>{post.userName}</Text>
+          <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
+        </View>
 
-      {post.description && (
-        <Text style={styles.description}>Details: {post.description}</Text>
-      )}
+        {/* Detail line */}
+        <Text style={styles.detail} numberOfLines={1}>
+          {post.quantity} meals · {post.foodType}
+        </Text>
 
-      <View style={styles.actionRow}>
-        <TouchableOpacity onPress={openGoogleMaps} style={styles.locationRow}>
-          <MaterialIcons name="location-on" size={20} color="red" />
-          <Text style={styles.trackText}>Track Location</Text>
-        </TouchableOpacity>
+        {/* Best before */}
+        <Text style={styles.expiry}>
+          Best before {shortDate(post.bestBefore)}
+        </Text>
 
-        {post.status === 'fulfilled' ? (
-          <Text style={styles.pickedText}>Food Picked</Text>
-        ) : (
-          canRequest && (
+        {/* Action row */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity onPress={openMaps} activeOpacity={0.7}>
+            <Text style={styles.trackLink}>Track location</Text>
+          </TouchableOpacity>
+
+          {post.status === 'fulfilled' ? (
+            <Text style={styles.fulfilledBadge}>Fulfilled</Text>
+          ) : canRequest ? (
             <TouchableOpacity
-              style={[
-                styles.requestButton,
-                { backgroundColor: hasRequested ? '#cc0000' : '#00b300' },
-              ]}
-              onPress={hasRequested ? handleCancelRequest : handleRequest}
+              style={[styles.actionBtn, hasRequested && styles.cancelBtn]}
+              onPress={hasRequested ? handleCancel : handleRequest}
+              activeOpacity={0.8}
             >
-              <Text style={styles.requestText}>
-                {hasRequested ? 'Cancel Request' : 'Request Food'}
+              <Text style={styles.actionBtnText}>
+                {hasRequested ? 'Cancel' : 'Request'}
               </Text>
             </TouchableOpacity>
-          )
-        )}
+          ) : null}
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: 'white',
-    marginVertical: 12,
-    marginHorizontal: 20,
-    padding: 20,
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: '#356F59',
-    shadowColor: '#1E4635',
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+  row: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
+  thumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 6,
+    backgroundColor: '#F0F0F0',
+  },
+  thumbPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 6,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbEmoji: {
+    fontSize: 26,
+  },
+  content: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 3,
   },
   userName: {
-    color: '#356F59',
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
+    color: TEXT_DARK,
+    flex: 1,
+    marginRight: 8,
   },
-  timestamp: {
-    color: 'black',
-    fontSize: 13,
-  },
-  image: {
-    height: 200,
-    width: '100%',
-    borderRadius: 12,
-    marginVertical: 1,
-    resizeMode: 'cover',
-    backgroundColor: '#E0E0E0',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+  time: {
+    fontSize: 12,
+    color: TEXT_LIGHT,
   },
   detail: {
-    fontSize: 15,
-    marginVertical: 2,
-    color: 'black',
-    lineHeight: 22,
+    fontSize: 13,
+    color: TEXT_GREY,
+    marginBottom: 2,
   },
-  description: {
-    marginTop: 0,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
-    color: 'black',
-    fontSize: 15,
-    lineHeight: 18,
-    fontStyle: 'italic',
+  expiry: {
+    fontSize: 12,
+    color: TEXT_LIGHT,
+    marginBottom: 8,
   },
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
   },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  trackLink: {
+    fontSize: 13,
+    color: PRIMARY,
+    fontWeight: '500',
   },
-  trackText: {
-    marginLeft: 4,
-    color: '#0080ff',
+  actionBtn: {
+    backgroundColor: PRIMARY,
+    paddingVertical: 5,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+  },
+  cancelBtn: {
+    backgroundColor: '#E5E5E5',
+  },
+  actionBtnText: {
+    fontSize: 13,
     fontWeight: '600',
-    fontSize: 15,
-    textDecorationLine: 'underline',
-  },
-  requestButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  requestText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-    letterSpacing: 0.5,
   },
-  pickedText: {
-    color: 'red',
-    fontWeight: '600',
-    textAlign: 'center',
-    fontSize: 18,
-    textDecorationLine: 'line-through',
+  fulfilledBadge: {
+    fontSize: 12,
+    color: TEXT_LIGHT,
+    fontWeight: '500',
   },
 });

@@ -3,11 +3,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserPendingScreen = () => {
   const navigation = useNavigation();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await AsyncStorage.multiRemove(['token', 'user', 'userId']);
     navigation.reset({
       index: 0,
       routes: [{ name: 'AuthStack' }],

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import FoodPost from '../models/post.js';
 import FoodRequest from '../models/request.js';
 import Notification from '../models/notification.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 // GET /api/users/:userId/status
 export const getUserStatusById = async (req, res) => {
@@ -32,7 +33,9 @@ export const checkUserExists = async (req, res) => {
 export const registerUser = async (req, res) => {
   try {
     const { role, userName, email, contactNumber, password } = req.body;
-    const licenseImage = req.file ? req.file.path : req.body.licenseImage || null;
+    const licenseImage = req.file
+      ? await uploadToCloudinary(req.file.buffer, 'shareabite/licenses')
+      : req.body.licenseImage || null;
 
     if (!role || !userName || !email || !contactNumber || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -231,7 +234,7 @@ export const updateUserProfile = async (req, res) => {
     user.userName = userName || user.userName;
     user.operatingHours = operatingHours || user.operatingHours;
     if (user.role === "restaurant" && cuisineType) user.cuisineType = cuisineType;
-    if (req.file) user.profileImage = req.file.path;
+    if (req.file) user.profileImage = await uploadToCloudinary(req.file.buffer, 'shareabite/profiles');
 
     await user.save();
     res.status(200).json({ message: "Profile updated", user });
@@ -272,7 +275,9 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: "At least one image is required." });
     }
 
-    const foodImages = req.files.map(file => `/uploads/posts/${file.filename}`);
+    const foodImages = await Promise.all(
+      req.files.map(file => uploadToCloudinary(file.buffer, 'shareabite/posts'))
+    );
     const newPost = new FoodPost({
       foodType,
       quantity,
@@ -298,28 +303,18 @@ export const getAllPosts = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("createdBy", "_id userName role profileImage");
 
-    const host = req.protocol + "://" + req.get("host");
-
     const formatted = posts.map(post => {
-      const profileImageUrl = post.createdBy?.profileImage
-        ? `${host}${post.createdBy.profileImage}`
-        : "";
-
-      const foodImageUrls = post.foodImages.map(img => {
-        return img.startsWith("/uploads/") ? `${host}${img}` : img;
-      });
-
       return {
         _id: post._id,
         userName: post.createdBy?.userName || "Unknown",
-        userImage: profileImageUrl,
+        userImage: post.createdBy?.profileImage || "",
         role: post.createdBy?.role,
         createdBy: post.createdBy?._id,
         foodType: post.foodType,
         quantity: post.quantity,
         bestBefore: post.bestBefore,
         description: post.description,
-        images: foodImageUrls,
+        images: post.foodImages,
         latitude: post.latitude,
         longitude: post.longitude,
         status: post.status,

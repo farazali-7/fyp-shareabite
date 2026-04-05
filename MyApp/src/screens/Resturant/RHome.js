@@ -1,177 +1,249 @@
-import { FAB, Appbar } from 'react-native-paper';
-import PostCard from '../Resturant/PostCard';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { fetchAllFoodPosts } from '../../apis/userAPI';
 import React, { useState } from 'react';
 import {
   View,
   FlatList,
-  StyleSheet, 
+  StyleSheet,
   Text,
   ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import PostCard from './PostCard';
+import { fetchAllFoodPosts } from '../../apis/userAPI';
 
-const RHomeScreen = () => {
+const PRIMARY   = '#356F59';
+const TEXT_DARK = '#1C1C1E';
+const TEXT_GREY = '#6B6B6B';
+const BORDER    = '#E2E2E2';
+const BG        = '#FFFFFF';
+
+export default function RHomeScreen() {
   const navigation = useNavigation();
 
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [posts,          setPosts]          = useState([]);
+  const [filtered,       setFiltered]       = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [search,         setSearch]         = useState('');
+  const [userName,       setUserName]       = useState('');
+  const [currentUserId,  setCurrentUserId]  = useState(null);
+  const [currentRole,    setCurrentRole]    = useState(null);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <Appbar.Action 
-          icon="chat" 
-          onPress={() => navigation.navigate('RestaurantChatList')}
-          color="white"
-          size={24}
-          style={styles.chatIcon}
-        />
-      ),
+      headerShown: false,
     });
   }, [navigation]);
 
-  const loadUserData = async () => {
-    try {
-      const userString = await AsyncStorage.getItem('user');
-      if (userString) {
-        const user = JSON.parse(userString);
-        const id = user._id;
-        const role = user.role;
-        setCurrentUserId(id);
-        setCurrentUserRole(role);
-      } else {
-        console.log('No user found in AsyncStorage.');
-      }
-    } catch (err) {
-      console.error('Failed to load user data:', err);
-    }
+  const loadUser = async () => {
+    const raw = await AsyncStorage.getItem('user');
+    if (!raw) return;
+    const user = JSON.parse(raw);
+    setCurrentUserId(user._id);
+    setCurrentRole(user.role);
+    setUserName(user.userName || user.email?.split('@')[0] || 'there');
   };
 
   const loadPosts = async () => {
     try {
       const data = await fetchAllFoodPosts();
-      if (data.posts && data.posts.length > 0) {
-        setPosts(data.posts);
-      } else {
-        setPosts([]);
-      }
-    } catch (err) {
-      console.error('Failed to load posts:', err);
-    } finally {
-      setLoading(false);
-    }
+      const list = data.posts ?? [];
+      setPosts(list);
+      setFiltered(list);
+    } catch (_) {}
+    finally { setLoading(false); setRefreshing(false); }
   };
 
   useFocusEffect(
     React.useCallback(() => {
-      const fetchData = async () => {
-        await loadUserData();
-        await loadPosts();
-      };
-      fetchData();
+      setLoading(true);
+      Promise.all([loadUser(), loadPosts()]);
     }, [])
   );
 
-  const handleNewPost = () => {
-    navigation.navigate('NewPost');
+  const handleSearch = (text) => {
+    setSearch(text);
+    if (!text.trim()) { setFiltered(posts); return; }
+    const q = text.toLowerCase();
+    setFiltered(posts.filter(p =>
+      p.foodType?.toLowerCase().includes(q) ||
+      p.userName?.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q)
+    ));
   };
+
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const ListHeader = () => (
+    <View style={styles.header}>
+      {/* Greeting */}
+      <View style={styles.greetRow}>
+        <View>
+          <Text style={styles.greeting}>{greeting()}, {userName}</Text>
+          <Text style={styles.subGreeting}>Food available near you</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('RestaurantChatList')}
+          style={styles.chatBtn}
+        >
+          <Text style={styles.chatBtnText}>Chat</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search */}
+      <TextInput
+        style={styles.search}
+        placeholder="Search food type, donor..."
+        placeholderTextColor="#ABABAB"
+        value={search}
+        onChangeText={handleSearch}
+        returnKeyType="search"
+      />
+
+      {/* Section label */}
+      <Text style={styles.sectionLabel}>
+        {filtered.length} {filtered.length === 1 ? 'post' : 'posts'} available
+      </Text>
+    </View>
+  );
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#356F59" />
+      <View style={styles.center}>
+        <ActivityIndicator size="small" color={PRIMARY} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+
       <FlatList
-        data={posts}
-        keyExtractor={(item) => item._id}
+        data={filtered}
+        keyExtractor={item => item._id}
         renderItem={({ item }) => (
           <PostCard
             post={item}
             currentUserId={currentUserId}
-            currentUserRole={currentUserRole}
+            currentUserRole={currentRole}
           />
         )}
+        ListHeaderComponent={<ListHeader />}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No posts available yet.</Text>
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>No posts found.</Text>
           </View>
         }
-        contentContainerStyle={styles.listContent}
+        refreshing={refreshing}
+        onRefresh={() => { setRefreshing(true); loadPosts(); }}
+        showsVerticalScrollIndicator={false}
       />
 
-      <FAB 
-        style={styles.fab} 
-        icon="plus" 
-        onPress={handleNewPost} 
-        color="white"
-      />
+      {/* New post button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('NewPost')}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.fabText}>+ Post food</Text>
+      </TouchableOpacity>
     </View>
   );
-};
-
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,                        
-    marginTop: 0,                
-    backgroundColor: 'white',     
-  },
-
-  loadingContainer: {
-    flex: 1,                      
-    justifyContent: 'center',      
-    alignItems: 'center',     },     
-  listContent: {
-    paddingHorizontal: 0,       
-    paddingBottom: 0,           
-  },
-
-  emptyContainer: {
+  root: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: BG,
+  },
+  center: {
+    flex: 1,
     alignItems: 'center',
-    marginTop: 50,                
+    justifyContent: 'center',
+    backgroundColor: BG,
   },
-
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 56,
+    paddingBottom: 8,
+    backgroundColor: BG,
+  },
+  greetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  greeting: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: TEXT_DARK,
+  },
+  subGreeting: {
+    fontSize: 13,
+    color: TEXT_GREY,
+    marginTop: 2,
+  },
+  chatBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 8,
+  },
+  chatBtnText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: TEXT_DARK,
+  },
+  search: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: TEXT_DARK,
+    backgroundColor: BG,
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    color: TEXT_GREY,
+    fontWeight: '500',
+    marginBottom: 4,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  empty: {
+    paddingTop: 60,
+    alignItems: 'center',
+  },
   emptyText: {
-    fontSize: 20,                 
-    color: 'white',
-    backgroundColor:'#356F59',                 
-    fontStyle: 'italic',         
+    fontSize: 14,
+    color: TEXT_GREY,
   },
-
-  
   fab: {
-    position: 'absolute',          
-    right: 20,                     
-    bottom: 20,                   
-    backgroundColor: '#356F59',    
-    borderRadius: 30,              
-    width: 60,
-    height: 60,
-    justifyContent: 'center',      
-    alignItems: 'center',          
-    elevation: 6,                 
-    shadowOpacity: 0.2,            
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    position: 'absolute',
+    bottom: 24,
+    right: 16,
+    backgroundColor: PRIMARY,
+    paddingVertical: 11,
+    paddingHorizontal: 18,
+    borderRadius: 8,
   },
-
-  chatIcon: {
-    marginRight: 16,               
-    backgroundColor: '#356F59',    
-    padding: 8,                 
-    borderRadius: 20,              
+  fabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
-
-export default RHomeScreen;
