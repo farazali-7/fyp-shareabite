@@ -6,7 +6,6 @@ import FoodRequest from '../models/request.js';
 import Notification from '../models/notification.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
-// GET /api/users/:userId/status
 export const getUserStatusById = async (req, res) => {
   const { userId } = req.params;
   try {
@@ -18,7 +17,6 @@ export const getUserStatusById = async (req, res) => {
   }
 };
 
-// Check if user exists
 export const checkUserExists = async (req, res) => {
   try {
     const { email, contactNumber } = req.body;
@@ -29,7 +27,6 @@ export const checkUserExists = async (req, res) => {
   }
 };
 
-// Register user
 export const registerUser = async (req, res) => {
   try {
     const { role, userName, email, contactNumber, password } = req.body;
@@ -53,7 +50,7 @@ export const registerUser = async (req, res) => {
     const notification = new Notification({
       user: user._id,
       title: "Thank you!",
-      message: "We welcome you to our application! Great to see you here!",
+      message: "We welcome you to our application!",
       type: role
     });
     await notification.save();
@@ -75,7 +72,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// Login user
 export const loginUser = async (req, res) => {
   const { email, password, role } = req.body;
   try {
@@ -109,50 +105,37 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Check if contact number exists
 export const contactNumberExits = async (req, res) => {
   const { contactNumber } = req.body;
   try {
     if (!contactNumber) return res.status(400).json({ message: "Contact number is required" });
-
     const user = await User.findOne({ contactNumber });
     if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.status(200).json({
-      message: "User exists",
-      userId: user._id,
-      role: user.role,
-    });
+    res.status(200).json({ message: "User exists", userId: user._id, role: user.role });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// Reset password
 export const resetPassword = async (req, res) => {
   const { emailOrPhone, newPassword } = req.body;
   try {
     if (!emailOrPhone || !newPassword) return res.status(400).json({ message: "All fields required" });
-
     const user = await User.findOne({ $or: [{ email: emailOrPhone }, { contactNumber: emailOrPhone }] });
     if (!user) return res.status(404).json({ message: "User not found" });
-
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
-
     res.status(200).json({ message: "Password reset successfully" });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// Get current user's profile & posts
 export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-
     const posts = await FoodPost.find({ createdBy: user._id }).sort({ createdAt: -1 });
     res.status(200).json({ user, posts });
   } catch (err) {
@@ -160,49 +143,38 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// Search user profiles
 export const searchUsersProfile = async (req, res) => {
   const { query } = req.params;
   try {
     const regex = new RegExp(query, 'i');
-    const results = await User.find({ userName: regex }).select('_id userName profileImage');
+    const results = await User.find({ userName: regex }).select('_id userName profileImage role');
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// View another profile & posts
 export const getProfileAndPosts = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .select('-password')
-      .populate('subscribers', '_id');
-
+    const user = await User.findById(req.params.id).select('-password').populate('subscribers', '_id');
     const posts = await FoodPost.find({ createdBy: req.params.id });
-
     res.json({ user, posts });
   } catch (err) {
-    console.error('Error fetching profile and posts:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
-
-// Subscribe/Unsubscribe
 export const toggleSubscribe = async (req, res) => {
   try {
     const { currentUserId } = req.body;
     const targetUser = await User.findById(req.params.targetId);
     if (!targetUser) return res.status(404).json({ message: 'User not found' });
-
     const isSubscribed = targetUser.subscribers.includes(currentUserId);
     if (isSubscribed) {
       targetUser.subscribers = targetUser.subscribers.filter(id => id.toString() !== currentUserId);
     } else {
       targetUser.subscribers.push(currentUserId);
     }
-
     await targetUser.save();
     res.json({ message: 'Subscription updated.' });
   } catch (err) {
@@ -210,7 +182,6 @@ export const toggleSubscribe = async (req, res) => {
   }
 };
 
-// Own profile details
 export const userProfileDetails = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select(
@@ -223,19 +194,16 @@ export const userProfileDetails = async (req, res) => {
   }
 };
 
-// Edit profile
 export const updateUserProfile = async (req, res) => {
   try {
     const { id } = req.params;
     const { userName, operatingHours, cuisineType } = req.body;
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "User not found" });
-
     user.userName = userName || user.userName;
     user.operatingHours = operatingHours || user.operatingHours;
     if (user.role === "restaurant" && cuisineType) user.cuisineType = cuisineType;
     if (req.file) user.profileImage = await uploadToCloudinary(req.file.buffer, 'shareabite/profiles');
-
     await user.save();
     res.status(200).json({ message: "Profile updated", user });
   } catch (error) {
@@ -243,50 +211,48 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-// Request food
 export const requestFood = async (req, res) => {
   try {
     const { postId, requesterId, receiverId } = req.body;
     const alreadyRequested = await FoodRequest.findOne({ postId, requesterId });
-
-    if (alreadyRequested) {
-      return res.status(400).json({ message: 'Already requested.' });
-    }
-
+    if (alreadyRequested) return res.status(400).json({ message: 'Already requested.' });
     const newRequest = new FoodRequest({ postId, requesterId, receiverId, status: 'pending' });
     await newRequest.save();
-
     res.status(201).json({ message: 'Request sent successfully.', request: newRequest });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
-// Create food post
+// Create food post — images optional, reads donor from JWT
 export const createPost = async (req, res) => {
   try {
-    const { foodType, quantity, bestBefore, description, createdBy, latitude, longitude } = req.body;
+    const { foodType, quantity, quantityUnit, bestBefore, description, area, latitude, longitude } = req.body;
+    const createdBy = req.user?._id || req.body.createdBy;
 
-    if (!foodType || !quantity || !bestBefore || !description || !createdBy) {
-      return res.status(400).json({ message: "All required fields must be provided." });
+    if (!foodType || !quantity || !bestBefore || !createdBy) {
+      return res.status(400).json({ message: "foodType, quantity, and bestBefore are required." });
     }
 
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "At least one image is required." });
+    let foodImages = [];
+    if (req.files && req.files.length > 0) {
+      foodImages = await Promise.all(
+        req.files.map(file => uploadToCloudinary(file.buffer, 'shareabite/posts'))
+      );
     }
 
-    const foodImages = await Promise.all(
-      req.files.map(file => uploadToCloudinary(file.buffer, 'shareabite/posts'))
-    );
     const newPost = new FoodPost({
       foodType,
-      quantity,
+      quantity: Number(quantity),
+      quantityUnit: quantityUnit || 'servings',
       bestBefore: new Date(bestBefore),
-      description,
+      description: description || '',
+      area: area || '',
       createdBy,
       latitude,
       longitude,
       foodImages,
+      status: 'active',
     });
 
     const savedPost = await newPost.save();
@@ -296,31 +262,36 @@ export const createPost = async (req, res) => {
   }
 };
 
-// Get all posts
+// Get all active posts for the charity food feed — auto-expire at query time
 export const getAllPosts = async (req, res) => {
   try {
-    const posts = await FoodPost.find()
-      .sort({ createdAt: -1 })
+    const now = new Date();
+
+    const posts = await FoodPost.find({
+      status: { $in: ['active', 'available'] },
+      bestBefore: { $gt: now },
+    })
+      .sort({ bestBefore: 1 })
       .populate("createdBy", "_id userName role profileImage");
 
-    const formatted = posts.map(post => {
-      return {
-        _id: post._id,
-        userName: post.createdBy?.userName || "Unknown",
-        userImage: post.createdBy?.profileImage || "",
-        role: post.createdBy?.role,
-        createdBy: post.createdBy?._id,
-        foodType: post.foodType,
-        quantity: post.quantity,
-        bestBefore: post.bestBefore,
-        description: post.description,
-        images: post.foodImages,
-        latitude: post.latitude,
-        longitude: post.longitude,
-        status: post.status,
-        createdAt: post.createdAt,
-      };
-    });
+    const formatted = posts.map(post => ({
+      _id: post._id,
+      userName: post.createdBy?.userName || "Unknown",
+      userImage: post.createdBy?.profileImage || "",
+      role: post.createdBy?.role,
+      createdBy: post.createdBy?._id,
+      foodType: post.foodType,
+      quantity: post.quantity,
+      quantityUnit: post.quantityUnit || 'servings',
+      area: post.area || '',
+      bestBefore: post.bestBefore,
+      description: post.description,
+      images: post.foodImages,
+      latitude: post.latitude,
+      longitude: post.longitude,
+      status: post.status,
+      createdAt: post.createdAt,
+    }));
 
     res.status(200).json({ posts: formatted });
   } catch (error) {
@@ -328,49 +299,111 @@ export const getAllPosts = async (req, res) => {
   }
 };
 
-// DELETE /api/posts/:postId
+// Mark post as fulfilled (donor confirms pickup happened)
+export const fulfillPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await FoodPost.findById(postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (post.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    post.status = 'fulfilled';
+    await post.save();
+    res.status(200).json({ message: 'Post marked as fulfilled' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Donor cancels a post — auto-rejects all pending requests
+export const cancelPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const io = req.app.get('io');
+
+    const post = await FoodPost.findById(postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (post.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const pendingRequests = await FoodRequest.find({ postId, status: 'pending' });
+    await FoodRequest.updateMany({ postId, status: { $in: ['pending', 'accepted'] } }, { status: 'rejected' });
+
+    for (const request of pendingRequests) {
+      io.to(request.requesterId.toString()).emit('charity_notification', {
+        postId,
+        type: 'cancelled',
+        message: 'The food post has been cancelled by the donor.',
+      });
+    }
+
+    post.status = 'cancelled';
+    await post.save();
+
+    res.status(200).json({ message: 'Post cancelled' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// Undo acceptance within the 5-minute window
+export const undoAcceptPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await FoodPost.findById(postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (post.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    if (post.status !== 'accepted') {
+      return res.status(400).json({ message: 'Post is not in accepted state' });
+    }
+
+    post.status = 'active';
+    post.acceptedBy = null;
+    await post.save();
+
+    await FoodRequest.updateMany({ postId }, { status: 'pending' });
+
+    res.status(200).json({ message: 'Acceptance undone. Post is active again.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 export const deletePostById = async (req, res) => {
   const { postId } = req.params;
   const requesterId = req.user._id;
-
   try {
     const post = await FoodPost.findById(postId);
-
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
-
+    if (!post) return res.status(404).json({ message: 'Post not found' });
     if (post.createdBy.toString() !== requesterId.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this post' });
     }
-
     await FoodPost.deleteOne({ _id: postId });
     res.status(200).json({ message: 'Post deleted successfully' });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error deleting post' });
   }
 };
 
-// PUT /api/posts/:postId
 export const updatePostById = async (req, res) => {
   try {
-    const { foodType, quantity, bestBefore, description } = req.body;
+    const { foodType, quantity, bestBefore, description, area, quantityUnit } = req.body;
     const post = await FoodPost.findById(req.params.postId);
-
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
-
+    if (!post) return res.status(404).json({ message: 'Post not found' });
     if (post.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to edit this post' });
     }
-
-    post.foodType = foodType || post.foodType;
-    post.quantity = quantity || post.quantity;
-    post.bestBefore = bestBefore || post.bestBefore;
-    post.description = description || post.description;
-
+    if (foodType) post.foodType = foodType;
+    if (quantity) post.quantity = quantity;
+    if (bestBefore) post.bestBefore = bestBefore;
+    if (description !== undefined) post.description = description;
+    if (area !== undefined) post.area = area;
+    if (quantityUnit) post.quantityUnit = quantityUnit;
     const updatedPost = await post.save();
     res.status(200).json(updatedPost);
   } catch (error) {

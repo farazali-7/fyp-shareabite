@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+const timeAgo = (date) => {
+  const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const RNotificationCard = ({ notification, onAccept, onReject }) => {
   const { requester, post, createdAt, requestStatus } = notification;
@@ -9,166 +19,165 @@ const RNotificationCard = ({ notification, onAccept, onReject }) => {
     setLocalStatus(requestStatus);
   }, [requestStatus]);
 
-  const dateObj = new Date(createdAt);
-  const notificationDate = dateObj.toLocaleDateString();
-  const notificationTime = dateObj.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          {requester?.profileImage && (
-            <Image
-              source={{ uri: requester.profileImage }}
-              style={styles.profileImage}
-            />
-          )}
-          <Text style={styles.requesterName}>
-            {requester?.userName || 'Unknown User'}
-          </Text>
-        </View>
-        <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{notificationTime}</Text>
-          <Text style={styles.dateText}>{notificationDate}</Text>
-        </View>
+    <View style={styles.row}>
+      {/* Avatar */}
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{getInitial(requester?.userName)}</Text>
+        {!localStatus && <View style={styles.unreadDot} />}
       </View>
 
-      <Text style={styles.body}>Requested your food post:</Text>
-      <Text style={styles.foodDetails}>
-        {post?.foodType} (Quantity: {post?.quantity})
-      </Text>
-
-      {localStatus !== 'accepted' && localStatus !== 'rejected' && (
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.acceptBtn}
-            onPress={() => {
-              onAccept(notification._id);
-              setLocalStatus('accepted');
-            }}
-          >
-            <Text style={styles.btnText}>Accept</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.rejectBtn}
-            onPress={() => {
-              onReject(notification._id);
-              setLocalStatus('rejected');
-            }}
-          >
-            <Text style={styles.btnText}>Reject</Text>
-          </TouchableOpacity>
+      {/* Content */}
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {requester?.userName || 'Unknown'}
+          </Text>
+          <Text style={styles.time}>{timeAgo(createdAt)}</Text>
         </View>
-      )}
-
-      {localStatus === 'accepted' && (
-        <Text style={{ color: 'green', fontWeight: 'bold', marginTop: 8 }}>
-           Accepted
+        <Text style={styles.body} numberOfLines={2}>
+          Requested{' '}
+          <Text style={styles.food}>{post?.foodType}</Text>
+          {post?.quantity ? ` · Qty ${post.quantity}` : ''}
         </Text>
-      )}
 
-      {localStatus === 'rejected' && (
-        <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 8 }}>
-           Rejected
-        </Text>
-      )}
+        {!localStatus || localStatus === 'pending' ? (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.acceptBtn}
+              activeOpacity={0.7}
+              onPress={() => {
+                setLocalStatus('accepted');
+                onAccept(notification._id);
+              }}
+            >
+              <Text style={styles.acceptText}>Accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.rejectBtn}
+              activeOpacity={0.7}
+              onPress={() => {
+                setLocalStatus('rejected');
+                onReject(notification._id);
+              }}
+            >
+              <Text style={styles.rejectText}>Reject</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={[styles.statusLabel, localStatus === 'accepted' ? styles.accepted : styles.rejected]}>
+            {localStatus === 'accepted' ? 'Accepted' : 'Rejected'}
+          </Text>
+        )}
+      </View>
     </View>
   );
 };
 
 export default RNotificationCard;
 
-
 const styles = StyleSheet.create({
-  card: {
-    padding: 16,
+  row: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#fff',
-    marginVertical: 8,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  header: {
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E8F1EE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  avatarText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#356F59',
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#356F59',
+    borderWidth: 1.5,
+    borderColor: '#fff',
+  },
+  content: {
+    flex: 1,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 2,
   },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  name: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    flex: 1,
+    marginRight: 8,
   },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-    backgroundColor: '#f0f0f0',
-  },
-  requesterName: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
-  },
-  timeContainer: {
-    alignItems: 'flex-end',
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  dateText: {
+  time: {
     fontSize: 12,
-    color: 'black',
+    color: '#ABABAB',
   },
   body: {
-    color: 'red',
-    marginBottom: 6,
-    fontSize: 14,
+    fontSize: 13,
+    color: '#6B6B6B',
+    lineHeight: 18,
+    marginBottom: 8,
   },
-  foodDetails: {
-    color: '#444',
+  food: {
     fontWeight: '600',
-    marginBottom: 12,
-    fontSize: 15,
+    color: '#1C1C1E',
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
+    gap: 8,
   },
   acceptBtn: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 8,
+    height: 30,
     paddingHorizontal: 16,
-    borderRadius: 6,
-    minWidth: 80,
+    borderRadius: 4,
+    backgroundColor: '#356F59',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  acceptText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#fff',
   },
   rejectBtn: {
-    backgroundColor: '#F44336',
-    paddingVertical: 8,
+    height: 30,
     paddingHorizontal: 16,
-    borderRadius: 6,
-    minWidth: 80,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E2E2E2',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  btnText: {
-    color: '#fff',
+  rejectText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#E53935',
+  },
+  statusLabel: {
+    fontSize: 13,
     fontWeight: '500',
   },
+  accepted: {
+    color: '#356F59',
+  },
+  rejected: {
+    color: '#E53935',
+  },
 });
-
-
-
-
-
-

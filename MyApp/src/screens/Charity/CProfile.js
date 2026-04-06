@@ -2,17 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  Image,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
-import { Entypo } from '@expo/vector-icons';
-
+import { useNavigation } from '@react-navigation/native';
 import { getUserProfile } from '../../apis/userAPI';
 
 const CProfileScreen = () => {
@@ -24,13 +23,9 @@ const CProfileScreen = () => {
   const fetchProfile = async () => {
     try {
       const data = await getUserProfile();
-      if (data && data.user) {
-        setProfile(data.user);
-      } else {
-        setProfile(null);
-      }
+      setProfile(data?.user || null);
     } catch (err) {
-      Alert.alert('Error', err.toString());
+      Alert.alert('Error', 'Failed to load profile.');
       setProfile(null);
     } finally {
       setLoading(false);
@@ -38,9 +33,7 @@ const CProfileScreen = () => {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -48,187 +41,158 @@ const CProfileScreen = () => {
   }, []);
 
   const handleViewDetails = () => {
-    if (profile?._id) {
-      navigation.navigate('ViewProfileDetails', { userId: profile._id });
-    }
-  };
-
-  const handleOpenDrawer = () => {
-    navigation.dispatch(DrawerActions.openDrawer());
+    if (profile?._id) navigation.navigate('ViewProfileDetails', { userId: profile._id });
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#356F59" style={{ marginTop: 50 }} />;
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator size="small" color="#356F59" style={{ marginTop: 60 }} />
+      </SafeAreaView>
+    );
   }
 
   if (!profile) {
     return (
-      <View style={styles.center}>
+      <SafeAreaView style={styles.safe}>
         <Text style={styles.emptyText}>No profile data found.</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
+  const initial = profile.userName ? profile.userName.charAt(0).toUpperCase() : '?';
+
+  const SETTINGS = [
+    { label: 'View Full Details', onPress: handleViewDetails },
+    { label: 'Edit Profile', onPress: () => navigation.navigate('EditProfile') },
+    { label: 'Request History', onPress: () => navigation.navigate('History') },
+  ];
+
   return (
-   <ScrollView
-  style={styles.container}
-  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
->
-  <View style={styles.headerContainer}>
-    <Text style={styles.headerTitle}></Text>
-    <TouchableOpacity onPress={() => navigation.openDrawer()}>
-      <Entypo name="dots-three-vertical" size={22} color="#356F59" />
-    </TouchableOpacity>
-  </View>
-
-  <View style={styles.backgroundWrapper}>
-    <View style={styles.topBackground} />
-    <View style={styles.bottomBackground} />
-
-    <View style={styles.topSection}>
-      <Image
-        source={{ uri: profile?.profileImage || 'https://i.pravatar.cc/150?img=12' }}
-        style={styles.profileImage}
-      />
-      <Text style={styles.userName}>{profile?.userName}</Text>
-      <Text style={styles.roleText}>
-        Role: {profile?.role === 'restaurant' ? 'Eatery' : 'Charity House'}
-      </Text>
-      <TouchableOpacity onPress={handleViewDetails}>
-        <Text style={styles.linkText}>View Full Details</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-
-
-      <View style={styles.divider} />
-
-      {profile.role === 'charity' && (
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            Only eateries can create food posts. As a charity, you can request food but cannot post it.
-          </Text>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <ScrollView
+        style={styles.scroll}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#356F59" />}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Avatar + name */}
+        <View style={styles.profileSection}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>{initial}</Text>
+          </View>
+          <Text style={styles.userName}>{profile.userName}</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>Charity House</Text>
+          </View>
+          {profile.email ? <Text style={styles.email}>{profile.email}</Text> : null}
         </View>
-      )}
-    </ScrollView>
+
+        {/* Divider */}
+        <View style={styles.sectionDivider} />
+
+        {/* Settings rows */}
+        {SETTINGS.map((item, i) => (
+          <TouchableOpacity
+            key={item.label}
+            style={[styles.settingsRow, i < SETTINGS.length - 1 && styles.rowBorder]}
+            activeOpacity={0.6}
+            onPress={item.onPress}
+          >
+            <Text style={styles.settingsLabel}>{item.label}</Text>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        ))}
+
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
+export default CProfileScreen;
+
 const styles = StyleSheet.create({
-  container: {
-marginTop:10,
+  safe: {
     flex: 1,
-    backgroundColor: 'white',
-  },
-
-  headerContainer: {
-    marginTop: 20,
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-  },
-  headerTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-
-  backgroundWrapper: {
-    position: 'relative',
-    backgroundColor: "#356F59",
-  },
-
-  topBackground: {
-    backgroundColor: 'white',
-    height: 180,
-    borderBottomLeftRadius: 200,
-    borderBottomRightRadius: 200,
-  },
-
-  bottomBackground: {
-    position: 'absolute',
-    top: 125,
-    left: 0,
-    right: 0,
-    height: 180,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 200,
-    borderTopRightRadius: 200,
-  },
-
-  topSection: {
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 16,
-    marginTop: -140,
-  },
-
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: 'white',
-    marginBottom: 0,
     backgroundColor: '#fff',
   },
-
-  userName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 8,
-    color: 'black',
-  },
-
-  roleText: {
-    fontSize: 14,
-    color: 'black',
-    marginTop: 4,
-  },
-
-  linkText: {
-    color: '#356F59',
-    marginTop: 10,
-    fontStyle: 'italic',
-    textDecorationLine: 'underline',
-  },
-
-  divider: {
-    height: 4,
-    backgroundColor: 'green',
-    marginHorizontal: 20,
-    marginTop: 20,
-  },
-
-  infoBox: {
-    marginVertical: 20,
-    marginHorizontal: 20,
-    backgroundColor: '#356F59',
-    borderColor: '#356F59',
-    borderWidth: 1,
-    padding: 12,
-    borderRadius: 8,
-  },
-  infoText: {
-    color: 'white',
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-
-  center: {
+  scroll: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  profileSection: {
     alignItems: 'center',
+    paddingTop: 32,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+  },
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E8F1EE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#356F59',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 6,
+  },
+  roleBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: '#E8F1EE',
+    marginBottom: 6,
+  },
+  roleBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#356F59',
+  },
+  email: {
+    fontSize: 13,
+    color: '#ABABAB',
+    marginTop: 2,
+  },
+  sectionDivider: {
+    height: 8,
+    backgroundColor: '#F6F6F6',
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+  },
+  rowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  settingsLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1C1C1E',
+  },
+  chevron: {
+    fontSize: 20,
+    color: '#C7C7CC',
+    lineHeight: 24,
   },
   emptyText: {
     textAlign: 'center',
-    color: 'gray',
+    color: '#ABABAB',
     fontSize: 14,
-    marginTop: 20,
+    marginTop: 24,
   },
 });
-
-export default CProfileScreen;

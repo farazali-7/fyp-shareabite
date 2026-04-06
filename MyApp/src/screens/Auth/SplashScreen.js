@@ -65,7 +65,7 @@ export default function SplashScreen({ navigation }) {
         case 'admin':
           return navigation.reset({ index: 0, routes: [{ name: 'AdminStack' }] });
         case 'restaurant':
-          return navigation.reset({ index: 0, routes: [{ name: 'RestaurantStackNav' }] });
+          return navigation.reset({ index: 0, routes: [{ name: 'DonorStack' }] });
         case 'charity':
           return navigation.reset({ index: 0, routes: [{ name: 'CharityStack' }] });
         default:

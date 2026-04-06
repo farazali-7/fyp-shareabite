@@ -1,98 +1,119 @@
-import React from "react";
-import { View, StyleSheet, Alert } from "react-native";
-import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
-import { useNavigation } from "@react-navigation/native";
-import { FontAwesome, AntDesign } from '@expo/vector-icons';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Drawer Menu Items
-const drawerList = [
-  { icon: { name: 'profile', library: AntDesign }, label: 'Profile', navigateTo: 'Profile' },
-  { icon: { name: 'edit', library: AntDesign }, label: 'EditProfile', navigateTo: 'EditProfile' },
-  { icon: { name: 'phone', library: FontAwesome }, label: 'Contact Us', navigateTo: 'ContactUs' },
-  { icon: { name: 'sign-out', library: FontAwesome }, label: 'Logout', action: 'logout' },
+const PRIMARY   = '#356F59';
+const TEXT_DARK = '#1C1C1E';
+const TEXT_GREY = '#6B6B6B';
+const BORDER    = '#EFEFEF';
+const BG        = '#FFFFFF';
+
+const MENU = [
+  { label: 'Profile',      screen: 'Profile'     },
+  { label: 'Edit Profile', screen: 'EditProfile' },
+  { label: 'Contact Us',   screen: 'ContactUs'   },
 ];
 
-
-const DrawerLayout = ({ icon, label, navigateTo, action }) => {
+export default function RDrawerContent(props) {
   const navigation = useNavigation();
-  const IconComponent = icon.library;
+  const [user, setUser] = useState({ userName: '', email: '' });
 
-  // Handle Logout
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(raw => {
+      if (!raw) return;
+      const u = JSON.parse(raw);
+      setUser({ userName: u.userName || '', email: u.email || '' });
+    });
+  }, []);
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'AuthStack' }], // Go back to Login/Register
-      });
-    } catch (error) {
-      console.error('Logout Error:', error);
-      Alert.alert('Error', 'Failed to logout. Please try again.');
-    }
-  };
-
-  // Decide what to do when button pressed
-  const handlePress = () => {
-    if (action === 'logout') {
-      Alert.alert(
-        'Logout',
-        'Are you sure you want to logout?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Logout', onPress: handleLogout },
-        ],
-        { cancelable: true }
-      );
-    } else if (navigateTo) {
-      navigation.navigate(navigateTo);
-    }
+  const confirmLogout = () => {
+    Alert.alert('Log out', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log out',
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.multiRemove(['token', 'user', 'userId']);
+          navigation.reset({ index: 0, routes: [{ name: 'AuthStack' }] });
+        },
+      },
+    ]);
   };
 
   return (
-    <DrawerItem
-      icon={({ color, size }) => <IconComponent name={icon.name} color={color} size={size} />}
-      label={label}
-      onPress={handlePress}
-    />
-  );
-};
-
-const DrawerItems = () => {
-  return drawerList.map((item, index) => (
-    <DrawerLayout
-      key={index}
-      icon={item.icon}
-      label={item.label}
-      navigateTo={item.navigateTo}
-      action={item.action}
-    />
-  ));
-};
-
-function DrawerContent(props) {
-  return (
-    <View style={{ flex: 1 }}>
-      <DrawerContentScrollView {...props}>
-        <View style={styles.drawerContent}>
-          <View style={styles.drawerSection}>
-            <DrawerItems />
+    <View style={styles.root}>
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* User block */}
+        <View style={styles.userBlock}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarLetter}>
+              {user.userName?.charAt(0)?.toUpperCase() || 'U'}
+            </Text>
           </View>
+          <Text style={styles.userName} numberOfLines={1}>{user.userName || 'User'}</Text>
+          <Text style={styles.email} numberOfLines={1}>{user.email}</Text>
+          <Text style={styles.role}>Eatery</Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Menu */}
+        <View style={styles.menu}>
+          {MENU.map(item => (
+            <TouchableOpacity
+              key={item.screen}
+              style={styles.menuItem}
+              onPress={() => navigation.navigate(item.screen)}
+              activeOpacity={0.55}
+            >
+              <Text style={styles.menuLabel}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </DrawerContentScrollView>
+
+      {/* Logout pinned to bottom */}
+      <View style={styles.bottom}>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.menuItem} onPress={confirmLogout} activeOpacity={0.55}>
+          <Text style={styles.logoutLabel}>Log out</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  drawerContent: {
-    flex: 1,
+  root:          { flex: 1, backgroundColor: BG },
+  scrollContent: { flexGrow: 1 },
+  userBlock: {
+    paddingHorizontal: 20,
+    paddingTop: 56,
+    paddingBottom: 20,
   },
-  drawerSection: {
-    marginTop: 15,
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: PRIMARY + '18',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
+  avatarLetter: { fontSize: 18, fontWeight: '600', color: PRIMARY },
+  userName:     { fontSize: 16, fontWeight: '600', color: TEXT_DARK, marginBottom: 3 },
+  email:        { fontSize: 13, color: TEXT_GREY, marginBottom: 8 },
+  role:         { fontSize: 11, color: TEXT_GREY, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.6 },
+  divider:      { height: 1, backgroundColor: BORDER },
+  menu:         { paddingTop: 4 },
+  menuItem:     { paddingHorizontal: 20, paddingVertical: 15 },
+  menuLabel:    { fontSize: 15, color: TEXT_DARK },
+  bottom:       { paddingBottom: 32 },
+  logoutLabel:  { fontSize: 15, color: '#D32F2F' },
 });
-
-export default DrawerContent;

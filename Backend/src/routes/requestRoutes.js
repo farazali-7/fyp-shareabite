@@ -1,25 +1,38 @@
-
 import express from 'express';
-import { createRequest , 
-    getRequestedNotifications ,cancelRequest , checkExistingRequest,
-    acceptRequest , rejectRequest , getCharityNotifications, 
+import {
+  createRequest,
+  getRequestedNotifications,
+  cancelRequest,
+  checkExistingRequest,
+  acceptRequest,
+  rejectRequest,
+  getCharityNotifications,
+  getMyPostRequests,
+  getMyRequests,
 } from '../controllers/requestController.js';
+import protect from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Create a food request
+// Donor: all requests on their posts, grouped by post
+router.get('/my-post-requests', protect, getMyPostRequests);
+
+// Charity: all requests they submitted
+router.get('/my-requests', protect, getMyRequests);
+
+// Create / cancel
 router.post('/create', createRequest);
+router.post('/cancel', cancelRequest);
 
-router.get(
-  '/check/:postId/:requesterId',
-  checkExistingRequest
-);router.post('/cancel', cancelRequest);
-//Accept or Reject Routes
-router.post('/accept',acceptRequest );
-router.post('/reject', rejectRequest );
+// Check
+router.get('/check/:postId/:requesterId', checkExistingRequest);
 
-//Fetching Charity Notifications
+// Accept / Reject
+router.post('/accept', acceptRequest);
+router.post('/reject', rejectRequest);
+
+// Legacy notification endpoints
 router.get('/notifications/charity/:userId', getCharityNotifications);
+router.get('/requested-notifications/:userId', getRequestedNotifications);
 
-router.get('/requested-notifications/:userId' , getRequestedNotifications)
 export default router;

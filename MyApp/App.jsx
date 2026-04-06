@@ -8,7 +8,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { SocketProvider } from "./src/context/SocketContext";
 
-// Auth Screens
+// Auth
 import SplashScreen from "./src/screens/Auth/SplashScreen";
 import Login from "./src/screens/Auth/Login";
 import RegisterScreen from "./src/screens/Auth/Register";
@@ -17,46 +17,59 @@ import SetPasswordScreen from "./src/screens/Auth/SetPassword";
 import ForgotPasswordScreen from "./src/screens/Auth/ForgotPassword";
 import ResetPasswordScreen from "./src/screens/Auth/ResetPassword";
 
-// Admin Stack
+// Admin
 import AdminDashboard from "./src/screens/Admin/AdminDashboard";
 import ApprovalSuccess from "./src/screens/Admin/ApprovalSuccess";
 import LicenseDetailModal from "./src/screens/Admin/LicenseDetailModal";
 import RejectionFlow from "./src/screens/Admin/RejectionFlow";
 import AdminDrawerContent from "./src/screens/Admin/AdminDrawerContent";
 
-// Restaurant Screens
-import RHomeScreen from "./src/screens/Resturant/RHome";
-import RSearchScreen from "./src/screens/Resturant/RSearch";
-import RNotificationScreen from "./src/screens/Resturant/RNotification";
+// Donor screens
+import DonorMyFoodScreen from "./src/screens/Resturant/DonorMyFoodScreen";
+import DonorRequestsScreen from "./src/screens/Resturant/DonorRequestsScreen";
+import PostFormScreen from "./src/screens/Resturant/PostFormScreen";
 import RProfileScreen from "./src/screens/Resturant/RProfile";
 import REditProfileScreen from "./src/screens/Resturant/REditProfile";
 import RHistoryScreen from "./src/screens/Resturant/RHistory";
-import RPost from "./src/screens/Resturant/RPost";
-import RDrawerContent from "./src/screens/Resturant/RDrawerContent";
 import EditPostScreen from "./src/screens/Resturant/REditPostScreen";
 import RViewProfileDetails from "./src/screens/Resturant/RViewProfileDetails";
 import RSearchViewProfileScreen from "./src/screens/Resturant/RSearchViewProfile";
+import RSearchScreen from "./src/screens/Resturant/RSearch";
 import RChatListScreen from "./src/screens/Resturant/RChatScreens/RChatListScreen";
 import RChatScreen from "./src/screens/Resturant/RChatScreens/RChatScreen";
 import RSearchUsersScreen from "./src/screens/Resturant/RChatScreens/RSearchUsersScreen";
+import RContactUsScreen from "./src/screens/Resturant/RContactFile";
 
-// Status Screens
-import UserPendingScreen from "./src/screens/valid/UserPendingScreen";
-import RejectionNoticeScreen from "./src/screens/valid/RejectionNoticeScreen";
-
-// Charity Screens
-import CHomeScreen from "./src/screens/Charity/CHome";
-import CSearchScreen from "./src/screens/Charity/CSearch";
-import CNotificationScreen from "./src/screens/Charity/CNotification";
+// Charity screens
+import CharityFoodScreen from "./src/screens/Charity/CharityFoodScreen";
+import PostDetailScreen from "./src/screens/Charity/PostDetailScreen";
+import CharityMyRequestsScreen from "./src/screens/Charity/CharityMyRequestsScreen";
 import CProfileScreen from "./src/screens/Charity/CProfile";
 import CEditProfileScreen from "./src/screens/Charity/CEditProfile";
 import CHistoryScreen from "./src/screens/Charity/CHistory";
-import CDrawerContent from "./src/screens/Charity/CDrawerContent";
+import CSearchScreen from "./src/screens/Charity/CSearch";
 import CSearchViewProfileScreen from "./src/screens/Charity/CSearchViewProfile";
-import RContactUsScreen from "./src/screens/Resturant/RContactFile";
 import CChatListScreen from "./src/screens/Charity/CChatScreens/CChatListScreen";
-import CSearchUsersScreen from "./src/screens/Charity/CChatScreens/CSearchUsersScreen";
 import CChatScreen from "./src/screens/Charity/CChatScreens/CChatScreen";
+import CSearchUsersScreen from "./src/screens/Charity/CChatScreens/CSearchUsersScreen";
+
+// Status screens
+import UserPendingScreen from "./src/screens/valid/UserPendingScreen";
+import RejectionNoticeScreen from "./src/screens/valid/RejectionNoticeScreen";
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+const AdminDrawerNavigator = () => {
+  const Drawer = createDrawerNavigator();
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <AdminDrawerContent {...props} />}
+      screenOptions={{ headerShown: false }}
+    >
+      <Drawer.Screen name="AdminDashboard" component={AdminDashboard} />
+    </Drawer.Navigator>
+  );
+};
 
 const AdminStack = () => {
   const Stack = createNativeStackNavigator();
@@ -70,87 +83,94 @@ const AdminStack = () => {
   );
 };
 
-const AdminDrawerNavigator = () => {
-  const Drawer = createDrawerNavigator();
-  return (
-    <Drawer.Navigator drawerContent={(props) => <AdminDrawerContent {...props} />} screenOptions={{ headerShown: false }}>
-      <Drawer.Screen name="AdminDashboard" component={AdminDashboard} />
-    </Drawer.Navigator>
-  );
+// ─── Donor ────────────────────────────────────────────────────────────────────
+
+const TAB_BAR_STYLE = {
+  backgroundColor: '#FFFFFF',
+  height: 58,
+  borderTopWidth: 1,
+  borderTopColor: '#EFEFEF',
+  paddingBottom: 6,
+  paddingTop: 6,
+  elevation: 0,
+  shadowOpacity: 0,
 };
 
-const RestaurantStackNav = () => {
-  const Stack = createNativeStackNavigator();
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={RestaurantTabs} />
-      <Stack.Screen name="Search" component={RSearchScreen} />
-      <Stack.Screen name="Notification" component={RNotificationScreen} />
-      <Stack.Screen name="Profile" component={RProfileScreen} />
-      <Stack.Screen name="EditPostScreen" component={EditPostScreen} />
-      <Stack.Screen name="ViewProfileDetails" component={RViewProfileDetails} />
-      <Stack.Screen name="SearchViewProfileScreen" component={RSearchViewProfileScreen} />
-      <Stack.Screen name="EditProfile" component={REditProfileScreen} />
-      <Stack.Screen name="History" component={RHistoryScreen} />
-      <Stack.Screen name="NewPost" component={RPost} />
-      <Stack.Screen name="ContactUs" component={RContactUsScreen} />
-      <Stack.Screen name="RestaurantChatList" component={RChatListScreen} />
-      <Stack.Screen name="RestaurantChat" component={RChatScreen} />
-      <Stack.Screen name="RestaurantChatSearch" component={RSearchUsersScreen} />
-    </Stack.Navigator>
-  );
+const TAB_ICON_MAP = {
+  MyFood:    { active: 'grid',         inactive: 'grid-outline' },
+  Requests:  { active: 'albums',       inactive: 'albums-outline' },
+  Messages:  { active: 'chatbubbles',  inactive: 'chatbubbles-outline' },
+  Account:   { active: 'person',       inactive: 'person-outline' },
+  Food:      { active: 'leaf',         inactive: 'leaf-outline' },
+  MyRequests:{ active: 'time',         inactive: 'time-outline' },
 };
 
-const RestaurantTabs = () => {
+const DonorTabs = () => {
   const Tab = createBottomTabNavigator();
   return (
     <Tab.Navigator
-      initialRouteName="Home"
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color }) => {
-          let iconName;
-          if (route.name === 'Home')         iconName = focused ? 'home'          : 'home-outline';
-          else if (route.name === 'Search')  iconName = focused ? 'search'        : 'search-outline';
-          else if (route.name === 'Notification') iconName = focused ? 'notifications' : 'notifications-outline';
-          else if (route.name === 'Profile') iconName = focused ? 'person'        : 'person-outline';
-          return <Ionicons name={iconName} size={22} color={color} />;
-        },
+        headerShown: false,
+        tabBarStyle: TAB_BAR_STYLE,
         tabBarActiveTintColor: '#356F59',
         tabBarInactiveTintColor: '#ABABAB',
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          height: 58,
-          borderTopWidth: 1,
-          borderTopColor: '#EFEFEF',
-          paddingBottom: 6,
-          paddingTop: 6,
-          elevation: 0,
-          shadowOpacity: 0,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
+        tabBarIcon: ({ focused, color }) => {
+          const icons = TAB_ICON_MAP[route.name];
+          return <Ionicons name={focused ? icons.active : icons.inactive} size={22} color={color} />;
         },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-        },
-        headerShown: false,
       })}
     >
-      <Tab.Screen name="Home"         component={RHomeScreen} />
-      <Tab.Screen name="Search"       component={RSearchScreen} />
-      <Tab.Screen name="Notification" component={RNotificationScreen} />
-      <Tab.Screen name="Profile"      component={RestaurantDrawerNavigator} />
+      <Tab.Screen name="MyFood"    component={DonorMyFoodScreen}    options={{ tabBarLabel: 'My Food' }} />
+      <Tab.Screen name="Requests"  component={DonorRequestsScreen}  options={{ tabBarLabel: 'Requests' }} />
+      <Tab.Screen name="Messages"  component={RChatListScreen}       options={{ tabBarLabel: 'Messages' }} />
+      <Tab.Screen name="Account"   component={RProfileScreen}        options={{ tabBarLabel: 'Account' }} />
     </Tab.Navigator>
   );
 };
 
-const RestaurantDrawerNavigator = () => {
-  const Drawer = createDrawerNavigator();
+const DonorStack = () => {
+  const Stack = createNativeStackNavigator();
   return (
-    <Drawer.Navigator   screenOptions={{ headerShown: false }}
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="DonorTabs"             component={DonorTabs} />
+      <Stack.Screen name="PostForm"              component={PostFormScreen} />
+      <Stack.Screen name="EditPostScreen"        component={EditPostScreen} />
+      <Stack.Screen name="EditProfile"           component={REditProfileScreen} />
+      <Stack.Screen name="History"               component={RHistoryScreen} />
+      <Stack.Screen name="ViewProfileDetails"    component={RViewProfileDetails} />
+      <Stack.Screen name="SearchViewProfileScreen" component={RSearchViewProfileScreen} />
+      <Stack.Screen name="Search"                component={RSearchScreen} />
+      <Stack.Screen name="ContactUs"             component={RContactUsScreen} />
+      <Stack.Screen name="DonorChat"             component={RChatScreen} />
+      <Stack.Screen name="DonorChatSearch"       component={RSearchUsersScreen} />
+    </Stack.Navigator>
+  );
+};
 
-    drawerContent={(props) => <RDrawerContent {...props} />} >
-      <Drawer.Screen name="Profile" component={RProfileScreen} />
-    </Drawer.Navigator>
-    
+// ─── Charity ──────────────────────────────────────────────────────────────────
+
+const CharityTabs = () => {
+  const Tab = createBottomTabNavigator();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: TAB_BAR_STYLE,
+        tabBarActiveTintColor: '#356F59',
+        tabBarInactiveTintColor: '#ABABAB',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
+        tabBarIcon: ({ focused, color }) => {
+          const icons = TAB_ICON_MAP[route.name];
+          return <Ionicons name={focused ? icons.active : icons.inactive} size={22} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Food"        component={CharityFoodScreen}        options={{ tabBarLabel: 'Food' }} />
+      <Tab.Screen name="MyRequests"  component={CharityMyRequestsScreen}  options={{ tabBarLabel: 'My Requests' }} />
+      <Tab.Screen name="Messages"    component={CChatListScreen}           options={{ tabBarLabel: 'Messages' }} />
+      <Tab.Screen name="Account"     component={CProfileScreen}            options={{ tabBarLabel: 'Account' }} />
+    </Tab.Navigator>
   );
 };
 
@@ -158,124 +178,36 @@ const CharityStack = () => {
   const Stack = createNativeStackNavigator();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={CharityTabs} />
-      <Stack.Screen name="Search" component={CSearchScreen} />
-      <Stack.Screen name="Notification" component={CNotificationScreen} />
-      <Stack.Screen name="Profile" component={CProfileScreen} />
-      <Stack.Screen name="EditProfile" component={CEditProfileScreen} />
-      <Stack.Screen name="History" component={CHistoryScreen} />
+      <Stack.Screen name="CharityTabs"           component={CharityTabs} />
+      <Stack.Screen name="PostDetail"            component={PostDetailScreen} />
+      <Stack.Screen name="EditProfile"           component={CEditProfileScreen} />
+      <Stack.Screen name="History"               component={CHistoryScreen} />
       <Stack.Screen name="SearchViewProfileScreen" component={CSearchViewProfileScreen} />
-      <Stack.Screen name="CharityChatList" component={CChatListScreen} />
-      <Stack.Screen name="CharityChat" component={CChatScreen} />
-      <Stack.Screen name="CharityChatSearch" component={CSearchUsersScreen} />
+      <Stack.Screen name="Search"                component={CSearchScreen} />
+      <Stack.Screen name="CharityChat"           component={CChatScreen} />
+      <Stack.Screen name="CharityChatSearch"     component={CSearchUsersScreen} />
     </Stack.Navigator>
   );
 };
 
-const CharityTabs = () => {
-  const Tab = createBottomTabNavigator();
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color }) => {
-          let iconName;
-          if (route.name === "Home") iconName = focused ? "home" : "home-outline";
-          else if (route.name === "Search") iconName = focused ? "search" : "search-outline";
-          else if (route.name === "Notification") iconName = focused ? "notifications" : "notifications-outline";
-          else if (route.name === "Profile") iconName = focused ? "person" : "person-outline";
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: 'white',
-        tabBarStyle: {
-          backgroundColor: '#356F59',
-          height: 60,
-          borderTopWidth: 1,
-          paddingBottom: 6,
-          paddingTop: 3,
-          borderRadius: 20,
-          marginHorizontal: 1,
-          marginBottom: 1,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 2,
-          shadowOffset: { width: 0, height: -2 },
-        },
-        tabBarLabelStyle: {
-          fontSize: 14,
-          fontWeight: 'bold',
-        },
-        headerShown: false,
-      })}
-    >
-      
-
- <Tab.Screen
-        name="Home"
-        component={CHomeScreen}
-        options={{
-          headerTitle: "Charity HOME",
-          headerShown: true,
-          headerStyle: {
-            paddingTop: 0,
-            backgroundColor: '#356F59',
-            borderBottomWidth: 0,
-            height: 90,
-
-          },
-          headerTitleStyle: {
-            color: 'white',
-            fontWeight: '600',
-            fontSize: 25,
-            fontFamily: 'System',
-            textTransform: 'capitalize',
-            letterSpacing: 0.2,
-          },
-          headerTintColor: 'white',
-          headerTitleAlign: 'center',
-          headerRightContainerStyle: {
-            paddingRight: 1,
-          },
-          headerTitleContainerStyle: {
-            paddingBottom: 8,
-          },
-
-        }}
-      />
-
-
-      <Tab.Screen name="Search" component={CSearchScreen} />
-      <Tab.Screen name="Notification" component={CNotificationScreen} />
-      <Tab.Screen name="Profile" component={CharityDrawerNavigator} />
-    </Tab.Navigator>
-  );
-};
-
-const CharityDrawerNavigator = () => {
-  const Drawer = createDrawerNavigator();
-  return (
-    <Drawer.Navigator drawerContent={(props) => <CDrawerContent {...props} />} screenOptions={{ headerShown: false }}>
-      <Drawer.Screen name="Profile" component={CProfileScreen} />
-    </Drawer.Navigator>
-  );
-};
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 const AuthStack = () => {
   const Stack = createNativeStackNavigator();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Splash" component={SplashScreen} />
-      <Stack.Screen name="Login" component={Login} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Splash"         component={SplashScreen} />
+      <Stack.Screen name="Login"          component={Login} />
+      <Stack.Screen name="Register"       component={RegisterScreen} />
       <Stack.Screen name="OtpVerification" component={OTPVerificationScreen} />
-      <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
+      <Stack.Screen name="SetPassword"    component={SetPasswordScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+      <Stack.Screen name="ResetPassword"  component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 };
 
+// ─── Root ─────────────────────────────────────────────────────────────────────
 
 const RootStack = createNativeStackNavigator();
 
@@ -289,16 +221,15 @@ export default function App() {
       <View style={{ flex: 1 }}>
         <NavigationContainer>
           <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName="AuthStack">
-            <RootStack.Screen name="AuthStack" component={AuthStack} />
-            <RootStack.Screen name="AdminStack" component={AdminStack} />
-            <RootStack.Screen name="RestaurantStackNav" component={RestaurantStackNav} />
+            <RootStack.Screen name="AuthStack"    component={AuthStack} />
+            <RootStack.Screen name="AdminStack"   component={AdminStack} />
+            <RootStack.Screen name="DonorStack"   component={DonorStack} />
             <RootStack.Screen name="CharityStack" component={CharityStack} />
-            <RootStack.Screen name="UserPending" component={UserPendingScreen} />
-            <RootStack.Screen name="Rejected" component={RejectionNoticeScreen} />
+            <RootStack.Screen name="UserPending"  component={UserPendingScreen} />
+            <RootStack.Screen name="Rejected"     component={RejectionNoticeScreen} />
           </RootStack.Navigator>
         </NavigationContainer>
       </View>
     </SocketProvider>
   );
 }
-

@@ -1,47 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const timeAgo = (date) => {
+  const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(date).toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
 
 const CharityNotificationCard = ({ notification }) => {
   const { post, createdAt, type, description } = notification;
-  const [status, setStatus] = useState(type);
-
-  useEffect(() => {
-    setStatus(type);
-  }, [type]);
-
-  const dateObj = new Date(createdAt);
-  const notificationDate = dateObj.toLocaleDateString();
-  const notificationTime = dateObj.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const isAccepted = type === 'accepted';
 
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          {status === 'accepted' ? ' Request Accepted' : ' Request Rejected'}
-        </Text>
-        <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{notificationTime}</Text>
-          <Text style={styles.dateText}>{notificationDate}</Text>
-        </View>
+    <View style={styles.row}>
+      {/* Status dot indicator */}
+      <View style={[styles.iconBadge, isAccepted ? styles.iconAccepted : styles.iconRejected]}>
+        <Text style={styles.iconText}>{isAccepted ? '✓' : '✕'}</Text>
       </View>
 
-      <Text style={styles.body}>{description || 'Your food request status has been updated.'}</Text>
-      <Text style={styles.foodDetails}>
-        {post?.foodType} (Qty: {post?.quantity})
-      </Text>
-
-      <Text
-        style={[
-          styles.statusText,
-          { color: status === 'accepted' ? 'green' : 'red' },
-        ]}
-      >
-        {status === 'accepted' ? ' Accepted' : ' Rejected'}
-      </Text>
+      {/* Content */}
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <Text style={styles.title}>
+            {isAccepted ? 'Request Accepted' : 'Request Rejected'}
+          </Text>
+          <Text style={styles.time}>{timeAgo(createdAt)}</Text>
+        </View>
+        <Text style={styles.body} numberOfLines={2}>
+          {description || 'Your food request status has been updated.'}
+        </Text>
+        {post?.foodType ? (
+          <Text style={styles.food}>{post.foodType}{post.quantity ? ` · Qty ${post.quantity}` : ''}</Text>
+        ) : null}
+      </View>
     </View>
   );
 };
@@ -49,52 +42,59 @@ const CharityNotificationCard = ({ notification }) => {
 export default CharityNotificationCard;
 
 const styles = StyleSheet.create({
-  card: {
-    padding: 16,
+  row: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#fff',
-    marginVertical: 8,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  header: {
+  iconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  iconAccepted: {
+    backgroundColor: '#E8F1EE',
+  },
+  iconRejected: {
+    backgroundColor: '#FEECEC',
+  },
+  iconText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1C1C1E',
+  },
+  content: {
+    flex: 1,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
+    marginBottom: 2,
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: 15,
-    color: '#333',
-  },
-  timeContainer: {
-    alignItems: 'flex-end',
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  dateText: {
-    fontSize: 12,
-    color: 'black',
-  },
-  body: {
-    fontSize: 14,
-    color: 'black',
-    marginBottom: 3,
-  },
-  foodDetails: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#444',
+    color: '#1C1C1E',
   },
-  statusText: {
-    marginTop: 4,
-    fontSize: 14,
-    fontWeight: 'bold',
+  time: {
+    fontSize: 12,
+    color: '#ABABAB',
+  },
+  body: {
+    fontSize: 13,
+    color: '#6B6B6B',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  food: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1C1C1E',
   },
 });
