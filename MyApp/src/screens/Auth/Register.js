@@ -92,15 +92,24 @@ export default function Register({ navigation }) {
   };
 
   const pickLicense = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-    if (!result.assets?.length) return;
-    setLicenseImage(result.assets[0].uri);
-    clearError('license');
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        setFieldError('license', 'Photo library access is required to upload a license.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      if (!result.assets?.length) return;
+      setLicenseImage(result.assets[0].uri);
+      clearError('license');
+    } catch (_) {
+      setFieldError('license', 'Could not open image picker. Please try again.');
+    }
   };
 
   return (

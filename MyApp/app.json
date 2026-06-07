@@ -26,6 +26,12 @@
         {
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to upload a business license."
+        }
       ]
     ],
     "extra": {

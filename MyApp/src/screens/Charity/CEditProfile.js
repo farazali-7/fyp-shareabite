@@ -75,15 +75,15 @@ const CEditProfileScreen = ({ navigation }) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
 
-    if (!result.cancelled) {
-      setProfileImageFile(result.uri);
-      setFormData(prev => ({ ...prev, profileImage: result.uri }));
+    if (!result.canceled && result.assets?.length) {
+      setProfileImageFile(result.assets[0].uri);
+      setFormData(prev => ({ ...prev, profileImage: result.assets[0].uri }));
     }
   };
 
