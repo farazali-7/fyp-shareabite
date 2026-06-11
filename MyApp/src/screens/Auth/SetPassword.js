@@ -20,8 +20,8 @@ export default function SetPasswordScreen({ route, navigation }) {
     if (password !== confirmPassword) {
       return Alert.alert('Mismatch', 'Passwords do not match');
     }
-    if (password.length < 6) {
-      return Alert.alert('Too Short', 'Password must be at least 6 characters');
+    if (password.length < 8) {
+      return Alert.alert('Too Short', 'Password must be at least 8 characters');
     }
 
     const { role, userName, email, contactNumber, licenseImage } = route.params;

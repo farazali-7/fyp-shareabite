@@ -1,14 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from './axiosInstance';
 
-// Create a new food request (by charity)
-export const createRequest = async ({ postId, requesterId, receiverId }) => {
+// Create a new food request (by charity).
+// requesterId is no longer sent — the backend derives it from the JWT token.
+export const createRequest = async ({ postId, receiverId }) => {
   try {
-    const res = await axiosInstance.post('/requests/create', {
-      postId,
-      requesterId,
-      receiverId,
-    });
+    const res = await axiosInstance.post('/requests/create', { postId, receiverId });
     return res.data;
   } catch (err) {
     console.error('Error creating request:', err.response?.data || err.message);
@@ -58,12 +55,11 @@ export const checkExistingRequest = async (postId, requesterId) => {
   }
 };
 
-export const cancelRequest = async ({ postId, requesterId }) => {
+// Cancel a request.
+// requesterId is no longer sent — the backend derives it from the JWT token.
+export const cancelRequest = async ({ postId }) => {
   try {
-    const res = await axiosInstance.post('/requests/cancel', {
-      postId,
-      requesterId,
-    });
+    const res = await axiosInstance.post('/requests/cancel', { postId });
     return res.data;
   } catch (err) {
     throw err;

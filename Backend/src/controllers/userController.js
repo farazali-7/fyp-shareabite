@@ -5,408 +5,331 @@ import FoodPost from '../models/post.js';
 import FoodRequest from '../models/request.js';
 import Notification from '../models/notification.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
+import asyncHandler from '../utils/asyncHandler.js';
+import { NotFoundError } from '../errors/NotFoundError.js';
+import { ForbiddenError } from '../errors/ForbiddenError.js';
+import { AppError } from '../errors/AppError.js';
+import { AuthError } from '../errors/AuthError.js';
 
-export const getUserStatusById = async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const user = await User.findById(userId).select('status');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    return res.status(200).json({ status: user.status });
-  } catch (err) {
-    return res.status(500).json({ message: 'Server error while fetching user status' });
+export const getUserStatusById = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.userId).select('status');
+  if (!user) return next(new NotFoundError('User'));
+  res.status(200).json({ status: user.status });
+});
+
+export const checkUserExists = asyncHandler(async (req, res) => {
+  const { email, contactNumber } = req.body;
+  const user = await User.findOne({ $or: [{ email }, { contactNumber }] });
+  res.status(200).json({ exists: !!user });
+});
+
+export const registerUser = asyncHandler(async (req, res) => {
+  const { role, userName, email, contactNumber, password } = req.body;
+  const licenseImage = req.file
+    ? await uploadToCloudinary(req.file.buffer, 'shareabite/licenses')
+    : null;
+
+  const existingUser = await User.findOne({ $or: [{ email }, { contactNumber }] });
+  if (existingUser) {
+    throw new AppError('An account with this email or phone number already exists.', 409, 'CONFLICT');
   }
-};
 
-export const checkUserExists = async (req, res) => {
-  try {
-    const { email, contactNumber } = req.body;
-    const user = await User.findOne({ $or: [{ email }, { contactNumber }] });
-    res.status(200).json({ exists: !!user });
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await new User({ role, userName, email, contactNumber, password: hashedPassword, licenseImage }).save();
 
-export const registerUser = async (req, res) => {
-  try {
-    const { role, userName, email, contactNumber, password } = req.body;
-    const licenseImage = req.file
-      ? await uploadToCloudinary(req.file.buffer, 'shareabite/licenses')
-      : req.body.licenseImage || null;
+  await new Notification({
+    user:  user._id,
+    title: 'Welcome to ShareABite!',
+    description: 'Your account is under review. We\'ll notify you once approved.',
+    type:  'general',
+  }).save();
 
-    if (!role || !userName || !email || !contactNumber || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+  res.status(201).json({
+    success: true,
+    message: 'Registration successful. Your account is pending admin approval.',
+    user: {
+      id:            user._id,
+      role:          user.role,
+      userName:      user.userName,
+      email:         user.email,
+      contactNumber: user.contactNumber,
+      licenseImage:  user.licenseImage,
+    },
+  });
+});
 
-    const existingUser = await User.findOne({ $or: [{ email }, { contactNumber }] });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already registered" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ role, userName, email, contactNumber, password: hashedPassword, licenseImage });
-    const user = await newUser.save();
-
-    const notification = new Notification({
-      user: user._id,
-      title: "Thank you!",
-      message: "We welcome you to our application!",
-      type: role
-    });
-    await notification.save();
-
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      user: {
-        id: user._id,
-        role: user.role,
-        userName: user.userName,
-        email: user.email,
-        contactNumber: user.contactNumber,
-        licenseImage: user.licenseImage,
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-export const loginUser = async (req, res) => {
+export const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password, role } = req.body;
-  try {
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    if (user.role !== role) return res.status(400).json({ message: "Role does not match" });
+  const user = await User.findOne({ email });
+  if (!user) return next(new AuthError('Invalid credentials.', 'INVALID_CREDENTIALS'));
+  if (user.role !== role) return next(new AppError('Role does not match.', 400, 'VALIDATION_ERROR'));
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) return res.status(400).json({ message: "Invalid Credentials" });
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return next(new AuthError('Invalid credentials.', 'INVALID_CREDENTIALS'));
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        _id: user._id,
-        userName: user.userName,
-        email: user.email,
-        contactNumber: user.contactNumber,
-        role: user.role,
-        profileImage: user.profileImage,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+  res.status(200).json({
+    success: true,
+    message: 'Login successful',
+    token,
+    user: {
+      _id:           user._id,
+      userName:      user.userName,
+      email:         user.email,
+      contactNumber: user.contactNumber,
+      role:          user.role,
+      profileImage:  user.profileImage,
+    },
+  });
+});
 
-export const contactNumberExits = async (req, res) => {
+export const contactNumberExits = asyncHandler(async (req, res, next) => {
   const { contactNumber } = req.body;
-  try {
-    if (!contactNumber) return res.status(400).json({ message: "Contact number is required" });
-    const user = await User.findOne({ contactNumber });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json({ message: "User exists", userId: user._id, role: user.role });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-};
+  const user = await User.findOne({ contactNumber });
+  if (!user) return next(new NotFoundError('User'));
+  res.status(200).json({ message: 'User exists', userId: user._id, role: user.role });
+});
 
-export const resetPassword = async (req, res) => {
-  const { emailOrPhone, newPassword } = req.body;
-  try {
-    if (!emailOrPhone || !newPassword) return res.status(400).json({ message: "All fields required" });
-    const user = await User.findOne({ $or: [{ email: emailOrPhone }, { contactNumber: emailOrPhone }] });
-    if (!user) return res.status(404).json({ message: "User not found" });
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
-    await user.save();
-    res.status(200).json({ message: "Password reset successfully" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-};
+// Step 1 of password reset: called after Firebase OTP verification succeeds.
+export const issueResetToken = asyncHandler(async (req, res, next) => {
+  const { contactNumber } = req.body;
+  const user = await User.findOne({ contactNumber }).select('_id');
+  if (!user) return next(new NotFoundError('Account'));
 
-export const getUserProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-    const posts = await FoodPost.find({ createdBy: user._id }).sort({ createdAt: -1 });
-    res.status(200).json({ user, posts });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-};
+  const resetToken = jwt.sign(
+    { userId: user._id, purpose: 'password-reset' },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
 
-export const searchUsersProfile = async (req, res) => {
+  res.status(200).json({ resetToken });
+});
+
+// Step 2 of password reset: requires the short-lived token from issueResetToken.
+export const resetPassword = asyncHandler(async (req, res, next) => {
+  const { resetToken, newPassword } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+  } catch {
+    return next(new AuthError('Reset link has expired or is invalid. Please start over.', 'TOKEN_EXPIRED'));
+  }
+
+  if (decoded.purpose !== 'password-reset') {
+    return next(new AuthError('Invalid reset token.', 'TOKEN_INVALID'));
+  }
+
+  const user = await User.findById(decoded.userId);
+  if (!user) return next(new NotFoundError('User'));
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  await user.save();
+
+  res.status(200).json({ success: true, message: 'Password reset successfully.' });
+});
+
+export const getUserProfile = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user._id).select('-password');
+  if (!user) return next(new NotFoundError('User'));
+  const posts = await FoodPost.find({ createdBy: user._id }).sort({ createdAt: -1 });
+  res.status(200).json({ user, posts });
+});
+
+export const searchUsersProfile = asyncHandler(async (req, res) => {
+  // req.params.query has been regex-escaped by the validation schema (ReDoS prevention)
   const { query } = req.params;
-  try {
-    const regex = new RegExp(query, 'i');
-    const results = await User.find({ userName: regex }).select('_id userName profileImage role');
-    res.json(results);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+  const results = await User.find({ userName: { $regex: query, $options: 'i' } })
+    .select('_id userName profileImage role');
+  res.json(results);
+});
 
-export const getProfileAndPosts = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('-password').populate('subscribers', '_id');
-    const posts = await FoodPost.find({ createdBy: req.params.id });
-    res.json({ user, posts });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+export const getProfileAndPosts = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select('-password').populate('subscribers', '_id');
+  const posts = await FoodPost.find({ createdBy: req.params.id });
+  res.json({ user, posts });
+});
 
-export const toggleSubscribe = async (req, res) => {
-  try {
-    const { currentUserId } = req.body;
-    const targetUser = await User.findById(req.params.targetId);
-    if (!targetUser) return res.status(404).json({ message: 'User not found' });
-    const isSubscribed = targetUser.subscribers.includes(currentUserId);
-    if (isSubscribed) {
-      targetUser.subscribers = targetUser.subscribers.filter(id => id.toString() !== currentUserId);
-    } else {
-      targetUser.subscribers.push(currentUserId);
-    }
-    await targetUser.save();
-    res.json({ message: 'Subscription updated.' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+export const toggleSubscribe = asyncHandler(async (req, res, next) => {
+  // SECURITY: subscriber identity is always derived from JWT — never from the body.
+  const userId = req.user._id;
+  const targetUser = await User.findById(req.params.targetId);
+  if (!targetUser) return next(new NotFoundError('User'));
 
-export const userProfileDetails = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select(
-      'userName email contactNumber role profileImage operatingHours cuisineType'
+  // Use .toString() comparison because subscribers is an ObjectId array
+  const isSubscribed = targetUser.subscribers.some((id) => id.toString() === userId.toString());
+  if (isSubscribed) {
+    targetUser.subscribers = targetUser.subscribers.filter((id) => id.toString() !== userId.toString());
+  } else {
+    targetUser.subscribers.push(userId);
+  }
+  await targetUser.save();
+  res.json({ success: true, message: 'Subscription updated.' });
+});
+
+export const userProfileDetails = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.params.id).select(
+    'userName email contactNumber role profileImage operatingHours cuisineType'
+  );
+  if (!user) return next(new NotFoundError('User'));
+  res.json({ user });
+});
+
+export const updateUserProfile = asyncHandler(async (req, res, next) => {
+  // SECURITY: profile updates apply only to the authenticated user — never to a URL-provided ID.
+  const user = await User.findById(req.user._id);
+  if (!user) return next(new NotFoundError('User'));
+
+  const { userName, operatingHours, cuisineType } = req.body;
+  if (userName)       user.userName       = userName;
+  if (operatingHours) user.operatingHours = operatingHours;
+  if (cuisineType && user.role === 'restaurant') user.cuisineType = cuisineType;
+  if (req.file) user.profileImage = await uploadToCloudinary(req.file.buffer, 'shareabite/profiles');
+
+  await user.save();
+  res.status(200).json({ success: true, message: 'Profile updated', user });
+});
+
+export const createPost = asyncHandler(async (req, res) => {
+  const { foodType, quantity, quantityUnit, bestBefore, description, area, latitude, longitude } = req.body;
+  // SECURITY: post creator is always derived from JWT — never from body fallback.
+  const createdBy = req.user._id;
+
+  let foodImages = [];
+  if (req.files?.length) {
+    foodImages = await Promise.all(
+      req.files.map((file) => uploadToCloudinary(file.buffer, 'shareabite/posts'))
     );
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ user });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-};
 
-export const updateUserProfile = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userName, operatingHours, cuisineType } = req.body;
-    const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    user.userName = userName || user.userName;
-    user.operatingHours = operatingHours || user.operatingHours;
-    if (user.role === "restaurant" && cuisineType) user.cuisineType = cuisineType;
-    if (req.file) user.profileImage = await uploadToCloudinary(req.file.buffer, 'shareabite/profiles');
-    await user.save();
-    res.status(200).json({ message: "Profile updated", user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  const post = await new FoodPost({
+    foodType,
+    quantity:     Number(quantity),
+    quantityUnit: quantityUnit || 'servings',
+    bestBefore:   new Date(bestBefore),
+    description:  description || '',
+    area:         area || '',
+    createdBy,
+    latitude,
+    longitude,
+    foodImages,
+    status: 'active',
+  }).save();
+
+  res.status(201).json({ success: true, message: 'Food post created successfully', post });
+});
+
+export const getAllPosts = asyncHandler(async (req, res) => {
+  const now = new Date();
+  const posts = await FoodPost.find({
+    status:     { $in: ['active', 'available'] },
+    bestBefore: { $gt: now },
+  })
+    .sort({ bestBefore: 1 })
+    .populate('createdBy', '_id userName role profileImage');
+
+  const formatted = posts.map((post) => ({
+    _id:          post._id,
+    userName:     post.createdBy?.userName || 'Unknown',
+    userImage:    post.createdBy?.profileImage || '',
+    role:         post.createdBy?.role,
+    createdBy:    post.createdBy?._id,
+    foodType:     post.foodType,
+    quantity:     post.quantity,
+    quantityUnit: post.quantityUnit || 'servings',
+    area:         post.area || '',
+    bestBefore:   post.bestBefore,
+    description:  post.description,
+    images:       post.foodImages,
+    latitude:     post.latitude,
+    longitude:    post.longitude,
+    status:       post.status,
+    createdAt:    post.createdAt,
+  }));
+
+  res.status(200).json({ posts: formatted });
+});
+
+export const fulfillPost = asyncHandler(async (req, res, next) => {
+  const post = await FoodPost.findById(req.params.postId);
+  if (!post) return next(new NotFoundError('Post'));
+  if (post.createdBy.toString() !== req.user._id.toString()) {
+    return next(new ForbiddenError('You can only mark your own posts as fulfilled.'));
   }
-};
+  post.status = 'fulfilled';
+  await post.save();
+  res.status(200).json({ success: true, message: 'Post marked as fulfilled.' });
+});
 
-export const requestFood = async (req, res) => {
-  try {
-    const { postId, requesterId, receiverId } = req.body;
-    const alreadyRequested = await FoodRequest.findOne({ postId, requesterId });
-    if (alreadyRequested) return res.status(400).json({ message: 'Already requested.' });
-    const newRequest = new FoodRequest({ postId, requesterId, receiverId, status: 'pending' });
-    await newRequest.save();
-    res.status(201).json({ message: 'Request sent successfully.', request: newRequest });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+export const cancelPost = asyncHandler(async (req, res, next) => {
+  const io = req.app.get('io');
+  const post = await FoodPost.findById(req.params.postId);
+  if (!post) return next(new NotFoundError('Post'));
+  if (post.createdBy.toString() !== req.user._id.toString()) {
+    return next(new ForbiddenError('You can only cancel your own posts.'));
   }
-};
 
-// Create food post — images optional, reads donor from JWT
-export const createPost = async (req, res) => {
-  try {
-    const { foodType, quantity, quantityUnit, bestBefore, description, area, latitude, longitude } = req.body;
-    const createdBy = req.user?._id || req.body.createdBy;
+  const pendingRequests = await FoodRequest.find({ postId: post._id, status: 'pending' });
+  await FoodRequest.updateMany({ postId: post._id, status: { $in: ['pending', 'accepted'] } }, { status: 'rejected' });
 
-    if (!foodType || !quantity || !bestBefore || !createdBy) {
-      return res.status(400).json({ message: "foodType, quantity, and bestBefore are required." });
-    }
-
-    let foodImages = [];
-    if (req.files && req.files.length > 0) {
-      foodImages = await Promise.all(
-        req.files.map(file => uploadToCloudinary(file.buffer, 'shareabite/posts'))
-      );
-    }
-
-    const newPost = new FoodPost({
-      foodType,
-      quantity: Number(quantity),
-      quantityUnit: quantityUnit || 'servings',
-      bestBefore: new Date(bestBefore),
-      description: description || '',
-      area: area || '',
-      createdBy,
-      latitude,
-      longitude,
-      foodImages,
-      status: 'active',
+  for (const req_ of pendingRequests) {
+    io?.to(req_.requesterId.toString()).emit('charity_notification', {
+      postId: post._id,
+      type:   'cancelled',
+      message: 'The food post has been cancelled by the donor.',
     });
-
-    const savedPost = await newPost.save();
-    res.status(201).json({ message: "Food post created successfully", post: savedPost });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
   }
-};
 
-// Get all active posts for the charity food feed — auto-expire at query time
-export const getAllPosts = async (req, res) => {
-  try {
-    const now = new Date();
+  post.status = 'cancelled';
+  await post.save();
+  res.status(200).json({ success: true, message: 'Post cancelled.' });
+});
 
-    const posts = await FoodPost.find({
-      status: { $in: ['active', 'available'] },
-      bestBefore: { $gt: now },
-    })
-      .sort({ bestBefore: 1 })
-      .populate("createdBy", "_id userName role profileImage");
-
-    const formatted = posts.map(post => ({
-      _id: post._id,
-      userName: post.createdBy?.userName || "Unknown",
-      userImage: post.createdBy?.profileImage || "",
-      role: post.createdBy?.role,
-      createdBy: post.createdBy?._id,
-      foodType: post.foodType,
-      quantity: post.quantity,
-      quantityUnit: post.quantityUnit || 'servings',
-      area: post.area || '',
-      bestBefore: post.bestBefore,
-      description: post.description,
-      images: post.foodImages,
-      latitude: post.latitude,
-      longitude: post.longitude,
-      status: post.status,
-      createdAt: post.createdAt,
-    }));
-
-    res.status(200).json({ posts: formatted });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to load posts" });
+export const undoAcceptPost = asyncHandler(async (req, res, next) => {
+  const post = await FoodPost.findById(req.params.postId);
+  if (!post) return next(new NotFoundError('Post'));
+  if (post.createdBy.toString() !== req.user._id.toString()) {
+    return next(new ForbiddenError('You can only undo acceptance on your own posts.'));
   }
-};
-
-// Mark post as fulfilled (donor confirms pickup happened)
-export const fulfillPost = async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const post = await FoodPost.findById(postId);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-    if (post.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-    post.status = 'fulfilled';
-    await post.save();
-    res.status(200).json({ message: 'Post marked as fulfilled' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+  if (post.status !== 'accepted') {
+    throw new AppError('Post is not in an accepted state.', 400, 'VALIDATION_ERROR');
   }
-};
 
-// Donor cancels a post — auto-rejects all pending requests
-export const cancelPost = async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const io = req.app.get('io');
+  post.status = 'active';
+  post.acceptedBy = null;
+  await post.save();
+  await FoodRequest.updateMany({ postId: post._id }, { status: 'pending' });
 
-    const post = await FoodPost.findById(postId);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-    if (post.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
+  res.status(200).json({ success: true, message: 'Acceptance undone. Post is active again.' });
+});
 
-    const pendingRequests = await FoodRequest.find({ postId, status: 'pending' });
-    await FoodRequest.updateMany({ postId, status: { $in: ['pending', 'accepted'] } }, { status: 'rejected' });
-
-    for (const request of pendingRequests) {
-      io.to(request.requesterId.toString()).emit('charity_notification', {
-        postId,
-        type: 'cancelled',
-        message: 'The food post has been cancelled by the donor.',
-      });
-    }
-
-    post.status = 'cancelled';
-    await post.save();
-
-    res.status(200).json({ message: 'Post cancelled' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+export const deletePostById = asyncHandler(async (req, res, next) => {
+  const post = await FoodPost.findById(req.params.postId);
+  if (!post) return next(new NotFoundError('Post'));
+  if (post.createdBy.toString() !== req.user._id.toString()) {
+    return next(new ForbiddenError('You can only delete your own posts.'));
   }
-};
+  await FoodPost.deleteOne({ _id: post._id });
+  res.status(200).json({ success: true, message: 'Post deleted successfully.' });
+});
 
-// Undo acceptance within the 5-minute window
-export const undoAcceptPost = async (req, res) => {
-  try {
-    const { postId } = req.params;
-
-    const post = await FoodPost.findById(postId);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-    if (post.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-    if (post.status !== 'accepted') {
-      return res.status(400).json({ message: 'Post is not in accepted state' });
-    }
-
-    post.status = 'active';
-    post.acceptedBy = null;
-    await post.save();
-
-    await FoodRequest.updateMany({ postId }, { status: 'pending' });
-
-    res.status(200).json({ message: 'Acceptance undone. Post is active again.' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+export const updatePostById = asyncHandler(async (req, res, next) => {
+  const post = await FoodPost.findById(req.params.postId);
+  if (!post) return next(new NotFoundError('Post'));
+  if (post.createdBy.toString() !== req.user._id.toString()) {
+    return next(new ForbiddenError('You can only edit your own posts.'));
   }
-};
 
-export const deletePostById = async (req, res) => {
-  const { postId } = req.params;
-  const requesterId = req.user._id;
-  try {
-    const post = await FoodPost.findById(postId);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-    if (post.createdBy.toString() !== requesterId.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this post' });
-    }
-    await FoodPost.deleteOne({ _id: postId });
-    res.status(200).json({ message: 'Post deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error deleting post' });
-  }
-};
+  const { foodType, quantity, bestBefore, description, area, quantityUnit } = req.body;
+  if (foodType     !== undefined) post.foodType     = foodType;
+  if (quantity     !== undefined) post.quantity     = quantity;
+  if (bestBefore   !== undefined) post.bestBefore   = bestBefore;
+  if (description  !== undefined) post.description  = description;
+  if (area         !== undefined) post.area         = area;
+  if (quantityUnit !== undefined) post.quantityUnit = quantityUnit;
 
-export const updatePostById = async (req, res) => {
-  try {
-    const { foodType, quantity, bestBefore, description, area, quantityUnit } = req.body;
-    const post = await FoodPost.findById(req.params.postId);
-    if (!post) return res.status(404).json({ message: 'Post not found' });
-    if (post.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to edit this post' });
-    }
-    if (foodType) post.foodType = foodType;
-    if (quantity) post.quantity = quantity;
-    if (bestBefore) post.bestBefore = bestBefore;
-    if (description !== undefined) post.description = description;
-    if (area !== undefined) post.area = area;
-    if (quantityUnit) post.quantityUnit = quantityUnit;
-    const updatedPost = await post.save();
-    res.status(200).json(updatedPost);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error updating post' });
-  }
-};
+  const updated = await post.save();
+  res.status(200).json(updated);
+});

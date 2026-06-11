@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from './axiosInstance';
 
 export const getUserStatus = async (userId) => {
@@ -41,14 +40,8 @@ export const loginUser = async ({ email, password, role }) => {
 };
 
 export const getUserProfile = async () => {
-  const storedUser = await AsyncStorage.getItem('user');
-  const parsedUser = JSON.parse(storedUser);
-  const token = parsedUser?.token;
-
-  const res = await axiosInstance.get('/users/profile', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
+  // Authorization header is added automatically by the axios interceptor
+  const res = await axiosInstance.get('/users/profile');
   return res.data;
 };
 
@@ -102,16 +95,10 @@ export const updateUserProfile = async (userId, formData) => {
 
 export const createFoodPost = async (formData) => {
   try {
-    const storedUser = await AsyncStorage.getItem('user');
-    const token = JSON.parse(storedUser)?.token;
-
+    // Authorization header is added automatically by the axios interceptor
     const res = await axiosInstance.post('/users/create', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
-
     return res.data;
   } catch (err) {
     throw err.response?.data?.message || 'Failed to create food post';
@@ -143,13 +130,8 @@ export const fetchAllFoodPosts = async () => {
 
 export const deletePost = async (postId) => {
   try {
-    const storedUser = await AsyncStorage.getItem('user');
-    const token = JSON.parse(storedUser)?.token;
-
-    const res = await axiosInstance.delete(`/users/${postId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
+    // Authorization header is added automatically by the axios interceptor
+    const res = await axiosInstance.delete(`/users/${postId}`);
     return res.data;
   } catch (err) {
     throw err.response?.data?.message || 'Failed to delete post';
@@ -158,17 +140,31 @@ export const deletePost = async (postId) => {
 
 export const editPost = async (postId, updatedFields) => {
   try {
-    const storedUser = await AsyncStorage.getItem('user');
-    const token = JSON.parse(storedUser)?.token;
-
-    const res = await axiosInstance.put(`/users/${postId}`, updatedFields, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
+    const res = await axiosInstance.put(`/users/${postId}`, updatedFields);
     return res.data;
   } catch (err) {
     throw err.response?.data?.message || 'Failed to update post';
   }
 };
 
+// Step 1 of forgot-password flow: called immediately after Firebase OTP verification.
+// The server confirms the phone exists in DB and issues a short-lived reset token.
+export const issueResetToken = async (contactNumber) => {
+  try {
+    const res = await axiosInstance.post('/users/issue-reset-token', { contactNumber });
+    return res.data; // { resetToken }
+  } catch (err) {
+    throw new Error(err.response?.data?.message || 'Failed to issue reset token');
+  }
+};
+
+// Step 2 of forgot-password flow: submit the reset token + new password.
+export const resetUserPassword = async ({ resetToken, newPassword }) => {
+  try {
+    const res = await axiosInstance.post('/users/reset-password', { resetToken, newPassword });
+    return res.data;
+  } catch (err) {
+    throw new Error(err.response?.data?.message || 'Failed to reset password');
+  }
+};
 

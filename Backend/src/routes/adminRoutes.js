@@ -1,19 +1,18 @@
 import express from 'express';
+import { getLicensesByStatus, approveLicense, rejectLicense } from '../controllers/adminController.js';
+import protect, { isAdmin } from '../middlewares/authMiddleware.js';
+import validate from '../middlewares/validate.js';
 import {
-  getLicensesByStatus,
-  approveLicense,
-  rejectLicense,
-} from '../controllers/adminController.js';
+  getLicensesSchema,
+  approveLicenseSchema,
+  rejectLicenseSchema,
+} from '../validation/admin.validation.js';
 
 const router = express.Router();
 
-// GET /admin/licenses?status=pending|approved|rejected
-router.get('/licenses', getLicensesByStatus);
-
-// PATCH /admin/licenses/:userId/approve
-router.patch('/licenses/:userId/approve', approveLicense);
-
-// PATCH /admin/licenses/:userId/reject
-router.patch('/licenses/:userId/reject', rejectLicense);
+// Order: protect → isAdmin → validate → controller
+router.get('/licenses',                 protect, isAdmin, validate(getLicensesSchema),    getLicensesByStatus);
+router.patch('/licenses/:userId/approve', protect, isAdmin, validate(approveLicenseSchema), approveLicense);
+router.patch('/licenses/:userId/reject',  protect, isAdmin, validate(rejectLicenseSchema),  rejectLicense);
 
 export default router;

@@ -6,37 +6,25 @@ import {
   markAsRead,
   getUserChats,
   createChat,
-  
 } from '../controllers/chatController.js';
 import protect from '../middlewares/authMiddleware.js';
-
-
+import validate from '../middlewares/validate.js';
+import {
+  searchUsersSchema,
+  createChatSchema,
+  sendMessageSchema,
+  chatIdParamSchema,
+} from '../validation/chat.validation.js';
 
 const router = express.Router();
 
-// Search routes
-router.route('/search/users')
-  .get(protect, searchUsers);
+router.get('/search/users', protect, validate(searchUsersSchema), searchUsers);
 
-// Chat routes
-router.route('/')
-  .get(protect, getUserChats)     
-  .post(protect, createChat);      
+router.get('/',  protect, getUserChats);
+router.post('/', protect, validate(createChatSchema), createChat);
 
-
-// Message routes
-router.get('/:chatId/messages', protect, getMessages);
-
-// Send a new message in a chat
-router.post('/:chatId/messages', protect, sendMessage);  
-
-// Read status routes
-router.route('/:chatId/mark-read')
-  .patch(protect, markAsRead);     
+router.get( '/:chatId/messages',  protect, validate(chatIdParamSchema), getMessages);
+router.post('/:chatId/messages',  protect, validate(sendMessageSchema), sendMessage);
+router.patch('/:chatId/mark-read', protect, validate(chatIdParamSchema), markAsRead);
 
 export default router;
-
-
-
-
-

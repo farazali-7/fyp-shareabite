@@ -2,20 +2,20 @@ import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'restaurant', 'charity'], required: true },
-  userName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  contactNumber: { type: String, required: true },
+  userName: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  contactNumber: { type: String, required: true, unique: true, trim: true },
   password: { type: String, required: true },
-  profileImage: { type: String }, 
-  licenseImage: { type: String }, 
+  profileImage: { type: String },
+  licenseImage: { type: String },
   profileCompleted: { type: Boolean, default: false },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   approvedByAdmin: { type: Boolean, default: false },
   location: { type: String },
-  operatingHours: { type: String }, 
-  cuisineType: { type: String }, 
+  operatingHours: { type: String },
+  cuisineType: { type: String },
   subscribers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  
+
   socketId: { type: String, default: null },
   onlineStatus: {
     type: String,

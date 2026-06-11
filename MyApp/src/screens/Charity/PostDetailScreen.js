@@ -69,9 +69,9 @@ export default function PostDetailScreen() {
     if (!currentUser) return;
     try {
       setSubmitting(true);
+      // requesterId is no longer sent — derived from JWT on the backend
       await createRequest({
         postId: post._id,
-        requesterId: currentUser._id,
         receiverId: post.createdBy,
       });
       setRequestStatus('pending');

@@ -14,6 +14,7 @@ import {
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { getAuth, signInWithPhoneNumber } from 'firebase/auth';
 import firebaseApp from '../../../firebaseConfig';
+import { issueResetToken } from '../../apis/userAPI';
 
 const auth = getAuth(firebaseApp);
 
@@ -136,13 +137,25 @@ export default function OTPVerificationScreen({ navigation, route }) {
     try {
       const result = await conf.confirm(code);
       setVerified(true);
-      setTimeout(() => {
-        if (flow === 'register') {
+
+      if (flow === 'register') {
+        setTimeout(() => {
           navigation.navigate('SetPassword', { contactNumber: result.user.phoneNumber, ...rest });
-        } else if (flow === 'forgot') {
-          navigation.navigate('ResetPassword', { contactNumber: result.user.phoneNumber });
+        }, 400);
+      } else if (flow === 'forgot') {
+        // After Firebase OTP verification, exchange the verified phone for a
+        // server-issued short-lived reset token. This prevents the old attack
+        // where anyone who knew a phone number could bypass the OTP step.
+        try {
+          const data = await issueResetToken(result.user.phoneNumber);
+          setTimeout(() => {
+            navigation.navigate('ResetPassword', { resetToken: data.resetToken });
+          }, 400);
+        } catch (apiErr) {
+          setVerified(false);
+          setErrorMsg(apiErr.message || 'No account found for this phone number. Please check and try again.');
         }
-      }, 400);
+      }
     } catch (e) {
       setDigits(Array(OTP_LENGTH).fill(''));
       pendingCodeRef.current = null;

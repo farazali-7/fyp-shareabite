@@ -16,7 +16,8 @@ const MessageSchema = new mongoose.Schema(
     content: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      maxlength: 2000,
     },
     readBy: [{
       type: mongoose.Schema.Types.ObjectId,
